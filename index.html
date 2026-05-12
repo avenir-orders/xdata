@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Log1 Premium - Inventario</title>
+    <style>
+        :root {
+            --bg-soft: #f8f9fa;
+            --card-white: #ffffff;
+            --accent-gold: #b8952a;
+            --header-cream: #fdfcf0;
+            --text-primary: #1c1c1e;
+            --text-secondary: #636366;
+            --error-red: #ff3b30;
+            --border-light: #e5e5ea;
+        }
+
+        body {
+            font-family: "Avenir Next", "Avenir", -apple-system, sans-serif;
+            background-color: var(--bg-soft);
+            color: var(--text-primary);
+            margin: 0; padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background-color: var(--header-cream);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(184, 149, 42, 0.2);
+            position: sticky; top: 0; z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        header h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+
+        .top-nav {
+            background: var(--card-white);
+            margin: 15px auto; padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 1170px;
+            display: flex; flex-wrap: wrap; gap: 20px;
+            justify-content: center;
+        }
+
+        .input-box { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 5px; }
+        .input-box label { font-size: 11px; font-weight: 700; color: var(--accent-gold); text-transform: uppercase; }
+
+        select, input[type="datetime-local"] {
+            border: 1px solid var(--border-light);
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        /* GRIGLIA DESKTOP OTTIMIZZATA */
+        .inventory-container {
+            padding: 0 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr; /* Mobile */
+            gap: 15px;
+            align-items: start;
+        }
+
+        @media (min-width: 768px) {
+            .inventory-container { grid-template-columns: repeat(2, 1fr); } /* Tablet */
+        }
+
+        @media (min-width: 1100px) {
+            .inventory-container { grid-template-columns: repeat(3, 1fr); } /* Desktop */
+        }
+
+        .category-card {
+            background: var(--card-white);
+            border-radius: 15px;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            height: fit-content;
+        }
+
+        .category-trigger {
+            padding: 15px 20px;
+            background: #fdfdfd;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .category-trigger:hover { background: #f5f5f7; }
+
+        .category-trigger h3 {
+            margin: 0; font-size: 14px; font-weight: 600;
+            color: var(--accent-gold); letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .chevron { font-size: 12px; color: var(--text-secondary); transition: transform 0.3s; }
+
+        .category-content { display: none; }
+        .category-card.is-open .category-content { display: block; }
+        .category-card.is-open .chevron { transform: rotate(180deg); }
+
+        .product-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .product-row:last-child { border-bottom: none; }
+        .product-name { font-size: 14px; }
+
+        .qty-input {
+            width: 50px; height: 35px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            background: #f2f2f7;
+            -webkit-appearance: none;
+        }
+
+        .qty-input:placeholder-shown {
+            background-color: #fff0f0;
+            border-color: var(--error-red);
+        }
+
+        .action-area { padding: 40px 20px; text-align: center; }
+
+        .btn-premium {
+            background-color: var(--text-primary);
+            color: white;
+            border: none;
+            padding: 18px 60px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .btn-premium:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<header><h1>RIMANENZE</h1></header>
+
+<div class="top-nav">
+    <div class="input-box">
+        <label>Punto Vendita</label>
+        <select id="puntoVendita">
+            <option value="">Seleziona lo Store...</option>
+            <option value="S">SS</option>
+            <option value="C">CC</option>
+            <option value="B">BB</option>
+        </select>
+    </div>
+    <div class="input-box">
+        <label>Data Report</label>
+        <input type="datetime-local" id="dataInventario">
+    </div>
+</div>
+
+<div class="inventory-container" id="mainWrapper"></div>
+
+<div class="action-area">
+    <button class="btn-premium" onclick="validateForm()">Invia Inventario</button>
+</div>
+
+<script>
+    const inventoryData = {
+        "PASTA": ["Palline norm", "Palline canapa", "Mezzi"],
+        "VASCHETTE": ["Melanzane", "Zucchine", "Peperoni", "Funghi", "Forno", "Fritte", "Salsa", "Asparagi"],
+        "FORMAGGI": ["Mozza kg", "Bufala", "Provola", "Burrata", "Casatella", "Ricotta", "NO lattosio", "Parmigiano", "Brie", "Gorgonzola", "Asiago", "Pecorino"],
+        "SALUMI": ["Salsiccia", "Pancetta", "Salamino num", "Porchetta", "Roastbeef", "P.cotto", "Sopressa", "Speck", "Mortadella", "P. Crudo", "Wurstel", "Bresaola"],
+        "SCAFFALERIA": ["Uova", "Pesto", "Pistacchio", "Noci", "s.Papavero", "PomSecchi", "Carciofi", "Olive", "Capperi", "Mais", "Miele", "Pel.Salsa"],
+        "FRESCO": ["Datterino", "Datt giallo", "Cipolla", "Rucola", "cass. Datt.", "casse D. Giallo", "cass.Cipolla", "Basilico", "Menta", "Pere"],
+        "PESCE": ["Acciughe", "Tonno (latte)", "Salmone", "Baccalà"],
+        "CONDIMENTI": ["Aceto", "Origano", "Sale", "Olio EVO", "Olio Aglio", "Olio Piccante", "Olio Fritte"],
+        "FREEZER": ["Fritte", "Forno", "Ghiaccio"],
+        "IMPASTI": ["Canapa", "Semola", "Lievito"],
+        "COMBUSTIBILE": ["Legna"],
+        "MONETE": ["Rotoli 0,50 €", "Rotoli 1 €", "Rotoli 2 €", "Banc. 5 €", "Banc. 10 €"],
+        "IMBALLAGGI": ["Pellicola", "Carta mani", "Cart.med", "Cart.mezzi", "Cart.pers."],
+        "DETERSIVI": ["Detergente", "Napisan", "Det. piatti", "Sapone mani", "Ric. scopa", "Stracci", "Spugne", "Spugne ferro"],
+        "VARIO": ["Rot. comande", "Rotoli pos", "Rotoli scontrini", "Spazzolaforno", "Sacchi plastica", "Sacc. plas picc", "Sacchi umido", "Sacc. umi. picc"]
+    };
+
+    function setup() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('dataInventario').value = now.toISOString().slice(0, 16);
+        buildInventory();
+    }
+
+    function buildInventory() {
+        const wrapper = document.getElementById('mainWrapper');
+        for (const [category, items] of Object.entries(inventoryData)) {
+            const card = document.createElement('div');
+            card.className = 'category-card';
+            // Categoria chiusa di default per ordine, clicca per aprire
+            card.innerHTML = `
+                <div class="category-trigger" onclick="this.parentElement.classList.toggle('is-open')">
+                    <h3>${category}</h3>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="category-content">
+                    ${items.map(item => `
+                        <div class="product-row">
+                            <span class="product-name">${item}</span>
+                            <input type="number" class="qty-input" inputmode="numeric" min="0" max="5" placeholder=" " oninput="verify(this)">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            wrapper.appendChild(card);
+        }
+    }
+
+    function verify(el) {
+        if (el.value !== "") {
+            let val = parseInt(el.value);
+            if (val > 5) el.value = 5;
+            if (val < 0) el.value = 0;
+        }
+    }
+
+    function validateForm() {
+        const store = document.getElementById('puntoVendita').value;
+        const inputs = document.querySelectorAll('.qty-input');
+        let emptyCount = 0;
+        let firstEmpty = null;
+
+        if (!store) {
+            alert("⚠️ Seleziona il Punto Vendita!");
+            return;
+        }
+
+        inputs.forEach(i => {
+            if (i.value === "") {
+                emptyCount++;
+                // Se la casella è vuota e la categoria è chiusa, la apriamo per farla vedere
+                if (!firstEmpty) {
+                    firstEmpty = i;
+                    let card = i.closest('.category-card');
+                    card.classList.add('is-open');
+                }
+            }
+        });
+
+        if (emptyCount > 0) {
+            alert("❌ Mancano " + emptyCount + " voci.");
+            firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstEmpty.focus();
+        } else {
+            alert("✅ Inventario di " + store + " inviato con successo!");
+        }
+    }
+
+    window.onload = setup;
+</script>
+</body>
+</html>

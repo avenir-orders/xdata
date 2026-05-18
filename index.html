@@ -483,8 +483,8 @@
             
             // AGGIUNTA LOGICA: Limite massimo vaschette
             
-            const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="3" oninput="this.value = this.value.replace(/[^\'0,2\', \'0,5\']/g, \'\');"' : '';
-            //const limitAttr = ing.cat === "VASCHETTE" ? ' onchange="if(![ \'0,2\', \'0,5\', \'\'].includes(this.value.trim())) this.value = \'\';"' : '';
+            //const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="3" oninput="this.value = this.value.replace(/[^\'0,2\', \'0,5\']/g, \'\');"' : '';
+            const limitAttr = ing.cat === "VASCHETTE" ? ' onchange="if(![ \'0,2\', \'0,5\', \'\'].includes(this.value.trim())) this.value = \'\';"' : '';
             let inputHtml = isCipolla ? `
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px">
                     <div style="display:flex; align-items:center; gap:5px; font-size:10px; color:var(--secondary)">Sfuse <input type="text" inputmode="decimal" class="qty-input" style="height:32px; width:55px" id="sfuse-${i}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, 0, ${i}); document.getElementById('sel-${i}').value = (this.value/20).toFixed(2); valuta(${i}, ${soglia})"></div>

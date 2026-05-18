@@ -482,7 +482,9 @@
             const isCipolla = ing.nome === "cass.Cipolla";
             
             // AGGIUNTA LOGICA: Limite massimo vaschette
-            const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="3" oninput="this.value = this.value.replace(/[^0,0-8,0]/g, \'\');"' : '';
+            const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="1" oninput="this.value = this.value.replace(/[^0-5]/g, \'\');"' : '';
+            const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="1" oninput="this.value = this.value.replace(/[^,]/g, \'\');"' : '';
+            const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="1" oninput="this.value = this.value.replace(/[^0-7]/g, \'\');"' : '';
             //const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="3" oninput="this.value = this.value.replace(/[^0,0-8,0]/g, \'\');"' : '';
             
             let inputHtml = isCipolla ? `

@@ -355,7 +355,7 @@
     const isWeekendDomani = isFestivo(domani);
 
     function bloccaNonNumerici(e) {
-        const allowed = ['0','1','2','3','4','5','6','7','8','9','.',',','/','+','Backspace','Tab','Delete','ArrowLeft','ArrowRight'];
+        const allowed = ['0','1','2','3','4','5','6','7','8','9','.','/','+','Backspace','Tab','Delete','ArrowLeft','ArrowRight'];
         if (!allowed.includes(e.key)) { e.preventDefault(); }
     }
 
@@ -483,8 +483,8 @@
             
             // AGGIUNTA LOGICA: Limite massimo vaschette
             
-            //const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="3" oninput="this.value = this.value.replace(/[^\'0,2\', \'0,5\']/g, \'\');"' : '';
-            const limitAttr = ing.cat === "VASCHETTE" ? ' onchange="if(![ \'0,2\', \'0,5\', \'\'].includes(this.value.trim())) this.value = \'\';"' : '';
+            const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="3" oninput="this.value = this.value.replace(/[^'0.2', '0.5']/g, \'\');"' : '';
+            //const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="2" oninput="this.value = this.value.replace(/[^0.0-8.0]/g, \'\');"' :
             let inputHtml = isCipolla ? `
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px">
                     <div style="display:flex; align-items:center; gap:5px; font-size:10px; color:var(--secondary)">Sfuse <input type="text" inputmode="decimal" class="qty-input" style="height:32px; width:55px" id="sfuse-${i}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, 0, ${i}); document.getElementById('sel-${i}').value = (this.value/20).toFixed(2); valuta(${i}, ${soglia})"></div>

@@ -484,9 +484,8 @@
             // AGGIUNTA LOGICA: Limite massimo vaschette
             
             
-            //const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="2" oninput="this.value = this.value.replace(/[^0.0-8.0]/g, \'\');"' :
-            const limitAttr = ing.cat === "VASCHETTE"  ? ' maxlength="4" oninput="if(!/^(0(,(25?|3|5|7)?)?|1(,(25?|3|5)?)?)?$/.test(this.value)) this.value = this.value.slice(0, -1);"' 
-  : '';
+            // const limitAttr = ing.cat === "VASCHETTE"  ? ' maxlength="4" oninput="if(!/^(0(,(25?|3|5|7)?)?|1(,(25?|3|5|7)?)?)?$/.test(this.value)) this.value = this.value.slice(0, -1);"' : '';
+            const limitAttr = ing.cat === "VASCHETTE"  ? ' maxlength="4" oninput="if(!/^(0(,(25?|3|5|7)?)?|1(,(25?|3|5|7)?)?|2(,(25?|3|5|7)?)?)?$/.test(this.value)) this.value = this.value.slice(0, -1);"' : '';
 
             
             let inputHtml = isCipolla ? `

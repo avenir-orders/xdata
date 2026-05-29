@@ -1,9 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ordini e Rimanenze</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
         :root {
             --primary: #3D1F1F;
@@ -163,11 +167,39 @@
         .tabella-tutte td { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: center; }
         .td-nome { text-align: left !important; font-weight: bold; width: 40%; padding-left: 10px !important; }
 
-        .grid-vista-tutte { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media (min-width: 768px) { .grid-vista-tutte { grid-template-columns: repeat(2, 1fr); } }
+        /* Nuova soluzione robusta per non allungare i riquadri bianchi (Flexbox) */
+        .grid-vista-tutte {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-start;
+            justify-content: center; /* Centra le categorie se non riempiono una riga */
+        }
+        .container-cat-tutte {
+            width: 100%;
+            max-width: 100%;
+        }
+        @media (min-width: 768px) {
+            .container-cat-tutte { width: calc(50% - 7.5px); }
+        }
+        @media (min-width: 1100px) {
+            .container-cat-tutte { width: calc(33.33% - 10px); }
+        } 
     </style>
 </head>
 <body>
+
+    <div id="modal-screenshot" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+        <p style="color:white; font-size:16px; font-weight:bold; text-align:center; margin-bottom:15px; line-height:1.5;">
+            ✅ Immagine Pronta!<br><br>
+            <span style="color:var(--warn); font-size:14px;">Tieni premuto a lungo sull'immagine qui sotto per condividerla su WhatsApp o salvarla in Galleria.</span>
+        </p>
+        <div style="overflow:auto; max-height:65vh; width:100%; max-width:600px; border:2px solid var(--border); border-radius:10px; background:white;">
+            <img id="img-risultato" style="width:100%; display:block;" />
+        </div>
+        <button onclick="document.getElementById('modal-screenshot').style.display='none'" style="margin-top:20px; background:var(--red-alert); color:white; width:100%; max-width:300px; padding:15px; border-radius:10px; font-weight:bold; border:none; text-transform:uppercase;">Chiudi</button>
+    </div>
+
     <header><h1>ORDINI e RIMANENZE</h1></header>
 
     <div id="overlay"></div>
@@ -253,10 +285,10 @@
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Pesto", fer: 1, we: 1 },
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Pistacchio", fer: 1, we: 1 },
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Noci", fer: 1, we: 1 },
-        { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Semi Papavero", fer: 1, we: 1 },
+        { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Semi Papavero", fer: 0.2, we: 0.2 },
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Pomodori Secchi", fer: 1, we: 1 },
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Carciofi", fer: 1, we: 1 },
-        { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Olive", fer: 1, we: 1 },
+        { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Olive (buste)", fer: 1, we: 1 },
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Capperi", fer: 1, we: 1 },
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Mais", fer: 1, we: 1 },
         { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Miele", fer: 1, we: 1 },
@@ -266,7 +298,7 @@
         { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Cipolla", fer: 1, we: 2 },
         { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Rucola", fer: 1, we: 2 },
         { cat: "FRESCO", color: "var(--cat-fresco)", nome: "cass. Datterino", fer: 0.5, we: 1 },
-        { cat: "FRESCO", color: "var(--cat-fresco)", nome: "cass. Datt. Giallo", fer: 0.25, we: 0.5 },
+        { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Datt. Giallo vaschette", fer: 0.25, we: 0.5 },
         { cat: "FRESCO", color: "var(--cat-fresco)", nome: "cass.Cipolla", fer: 0.25, we: 0.25 },
         { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Basilico", fer: 1, we: 2 },
         { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Menta", fer: 1, we: 1 },
@@ -278,7 +310,7 @@
         { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Aceto balsamico", fer: 1, we: 1 },
         { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Origano", fer: 1, we: 1 },
         { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Sale", fer: 1, we: 1 },
-        { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Olio EVO", fer: 2, we: 1 },
+        { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Olio EVO", fer: 0.5, we: 1 },
         { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Olio Aglio", fer: 1, we: 1 },
         { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Olio Piccante", fer: 1, we: 1 },
         { cat: "CONDIMENTI", color: "var(--cat-condimenti)", nome: "Olio Fritte", fer: 1, we: 1 },
@@ -294,11 +326,11 @@
         { cat: "MONETE", color: "var(--cat-monete)", nome: "Rotoli 2 €", fer: 1, we: 1 },
         { cat: "MONETE", color: "var(--cat-monete)", nome: "Banc. 5 €", fer: 150, we: 150 },
         { cat: "MONETE", color: "var(--cat-monete)", nome: "Banc. 10 €", fer: 150, we: 150 },
-        { cat: "IMBALLAGGI", color: "var(--cat-imballaggi)", nome: "Pellicola", fer: 1, we: 1 },
-        { cat: "IMBALLAGGI", color: "var(--cat-imballaggi)", nome: "Carta mani", fer: 2, we: 2 },
-        { cat: "IMBALLAGGI", color: "var(--cat-imballaggi)", nome: "Cart.med", fer: 1, we: 2 },
-        { cat: "IMBALLAGGI", color: "var(--cat-imballaggi)", nome: "Cart.mezzi", fer: 1, we: 1 },
-        { cat: "IMBALLAGGI", color: "var(--cat-imballaggi)", nome: "Cart.pers.", fer: 0, we: 0 },
+        { cat: "IMBALLAGGI", color: "var(--cat-impasti)", nome: "Pellicola", fer: 1, we: 1 },
+        { cat: "IMBALLAGGI", color: "var(--cat-impasti)", nome: "Carta mani", fer: 2, we: 2 },
+        { cat: "IMBALLAGGI", color: "var(--cat-impasti)", nome: "Cart.med", fer: 1, we: 2 },
+        { cat: "IMBALLAGGI", color: "var(--cat-impasti)", nome: "Cart.mezzi", fer: 1, we: 1 },
+        { cat: "IMBALLAGGI", color: "var(--cat-impasti)", nome: "Cart.pers.", fer: 0, we: 0 },
         { cat: "DETERSIVI", color: "var(--cat-detersivi)", nome: "Detergente", fer: 1, we: 1 },
         { cat: "DETERSIVI", color: "var(--cat-detersivi)", nome: "Napisan", fer: 1, we: 1 },
         { cat: "DETERSIVI", color: "var(--cat-detersivi)", nome: "Det. piatti", fer: 1, we: 1 },
@@ -307,6 +339,17 @@
         { cat: "DETERSIVI", color: "var(--cat-detersivi)", nome: "Stracci", fer: 1, we: 1 },
         { cat: "DETERSIVI", color: "var(--cat-detersivi)", nome: "Spugne", fer: 1, we: 1 },
         { cat: "DETERSIVI", color: "var(--cat-detersivi)", nome: "Spugne ferro", fer: 1, we: 1 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Coca Cola N.", fer: 10, we: 10 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Coca Cola zero N.", fer: 5, we: 5 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Fanta N.", fer: 0, we: 0 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Ichnusa non filtrata N.", fer: 5, we: 10 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Pedavena N.", fer: 5, we: 10 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Helles N.", fer: 1, we: 2 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Fred N.", fer: 1, we: 2 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Bianca N.", fer: 1, we: 2 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Ipa N.", fer: 1, we: 2 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Acqua naturale N.", fer: 1, we: 2 },
+        { cat: "BIBITE", color: "var(--cat-bibite)", nome: "Acqua frizzante N.", fer: 1, we: 2 },
         { cat: "VARIO", color: "var(--cat-vario)", nome: "Rot. comande", fer: 5, we: 10 },
         { cat: "VARIO", color: "var(--cat-vario)", nome: "Rotoli pos", fer: 2, we: 5 },
         { cat: "VARIO", color: "var(--cat-vario)", nome: "Rotoli scontrini", fer: 2, we: 5 },
@@ -315,6 +358,8 @@
         { cat: "VARIO", color: "var(--cat-vario)", nome: "Sacc. plas picc", fer: 1, we: 1 },
         { cat: "VARIO", color: "var(--cat-vario)", nome: "Sacchi umido", fer: 1, we: 2 },
         { cat: "VARIO", color: "var(--cat-vario)", nome: "Sacc. umi. picc", fer: 1, we: 1 },
+        { cat: "VARIO", color: "var(--cat-vario)", nome: "Borsette", fer: 5, we: 10 },
+        { cat: "VARIO", color: "var(--cat-vario)", nome: "Gel mani", fer: 0.3, we: 0.5 },
         { cat: "VERDURE CRUDE", color: "var(--cat-crude)", nome: "Melanzane crude", fer: 0, we: 0, noObbligo: true },
         { cat: "VERDURE CRUDE", color: "var(--cat-crude)", nome: "Zucchine crude", fer: 0, we: 0, noObbligo: true },
         { cat: "VERDURE CRUDE", color: "var(--cat-crude)", nome: "Peperoni crudi", fer: 0, we: 0, noObbligo: true },
@@ -412,7 +457,11 @@
             if (!raggruppati[ing.cat]) raggruppati[ing.cat] = { color: ing.color, items: [] };
             raggruppati[ing.cat].items.push(ing);
         });
-        let h = `<div class="grid-vista-tutte">`;
+        
+        let h = `
+            <button onclick="scaricaScreenshot(this)" style="background:var(--primary); color:white; width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📸 SALVA COME IMMAGINE</button>
+            <div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px;" class="grid-vista-tutte">`;
+
         for (const cat in raggruppati) {
             h += `<div class="container-cat-tutte">
                 <div class="header-cat-tabella">${cat}</div>
@@ -431,6 +480,46 @@
         }
         h += `</div>`;
         cont.innerHTML = h;
+    }
+
+    function scaricaScreenshot(btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "⏳ Generazione in corso (attendi)...";
+        btn.disabled = true;
+
+        const area = document.getElementById('area-da-fotografare');
+        
+        const originalWidth = area.style.width;
+        const originalMargin = area.style.margin;
+        
+        area.style.width = "1200px";
+        area.style.margin = "0 auto";
+
+        setTimeout(() => {
+            html2canvas(area, { 
+                scale: 1, 
+                backgroundColor: "#ffffff",
+                useCORS: true,
+                windowWidth: 1200 
+            }).then(canvas => {
+                area.style.width = originalWidth;
+                area.style.margin = originalMargin;
+
+                const imgData = canvas.toDataURL('image/png');
+                document.getElementById('img-risultato').src = imgData;
+                document.getElementById('modal-screenshot').style.display = 'flex';
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+            }).catch(err => {
+                alert("Errore durante la creazione dell'immagine. Riprova.");
+                area.style.width = originalWidth;
+                area.style.margin = originalMargin;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }, 150); 
     }
 
     function generaVistaArchivio() {
@@ -477,8 +566,12 @@
         ingredienti.forEach((ing, i) => {
             if (ing.nome === "Lievito" && p !== "BIBAN") return;
             if (ing.nome === "Pel.Salsa" && p !== "CASTA") return;
+            if (ing.nome === "Pelati Salsa" && p === "SILEA") return;
             if (ing.cat === "VERDURE CRUDE" && (p !== "CASTA" || oraAttuale.getDay() !== 0)) return;
-            if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && p === "CASTA") return;
+            
+            if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) return;
+            if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && p === "SILEA") return;
+
             if (ing.cat !== currentCat) {
                 cont.innerHTML += `<div class="categoria-header cat-title">${ing.cat}</div>`;
                 currentCat = ing.cat;
@@ -511,7 +604,14 @@
         ingredienti.forEach((ing, i) => {
             const input = document.getElementById(`sel-${i}`);
             if (input && input.value.trim() === "") {
-                if (!(ing.nome === "Lievito" && p !== "BIBAN") && !(ing.nome === "Pel.Salsa" && p !== "CASTA") && !((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && p === "CASTA") && !ing.noObbligo) { vuoti.push(ing.nome); }
+                if (!(ing.nome === "Lievito" && p !== "BIBAN") && 
+                    !(ing.nome === "Pel.Salsa" && p !== "CASTA") && 
+                    !(ing.nome === "Pelati Salsa" && p === "SILEA") && 
+                    !((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) && 
+                    !((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && p === "SILEA") && 
+                    !ing.noObbligo) { 
+                        vuoti.push(ing.nome); 
+                }
             }
         });
         if (vuoti.length > 0) {

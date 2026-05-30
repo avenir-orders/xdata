@@ -18,7 +18,7 @@ const ingredienti = [
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Salsa", fer: 1, we: 2 },
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Asparagi I.G.P.", fer: 1, we: 2 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Mozzarella in kg", fer: 15, we: 30 },
-    { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Bufala", fer: 5, we: 15 },
+    { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Bufala (numero)", fer: 5, we: 15 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Provola aff.", fer: 2, we: 4 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Burrata", fer: 5, we: 15 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Casatella", fer: 1, we: 3 },

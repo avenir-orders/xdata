@@ -2,7 +2,7 @@
     --primary: #3D1F1F;
     --secondary: #8d6e63;
     --accent: #d84315;
-    --bg-body: #000000;
+    --bg-body: #ffffff;
     --surface: #ffffff;
     --border: #e7e0d7;
     --text-main: #3e2723;
@@ -20,7 +20,7 @@ body {
     margin: 0;
     padding-bottom: 120px;
     line-height: 1.4;
-    backgorund-image: url('Pistacchio.jpg');
+    /*backgorund-image: url('Pistacchio.jpg');*/
 }
 
 .header-box {

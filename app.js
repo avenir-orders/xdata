@@ -86,16 +86,13 @@ function generaVistaTutte() {
         <button onclick="scaricaScreenshot(this)" style="background:var(--primary); color:white; width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📸 SALVA COME IMMAGINE</button>
         <div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
 
-    // Creiamo 3 colonne fisiche separate
     const colonneHTML = ["", "", ""];
-    let indexColonna = 0;
 
-// --- ORDINAMENTO RIGOROSO E PULIZIA DEI VECCHI SALVATAGGI ---
+    // 1. Definiamo il tuo ordine militare
     const ordineSacro = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", "SCAFFALERIA", "IMPASTI", "IMBALLAGGI"];
     const chiaviSito = Object.keys(raggruppati);
     const ordineFinale = [];
 
-    // 1. Inseriamo le categorie principali nell'ordine esatto pulendo spazi e minuscole
     ordineSacro.forEach(target => {
         const chiaveVera = chiaviSito.find(k => k.trim().toUpperCase() === target);
         if (chiaveVera) {
@@ -104,21 +101,23 @@ function generaVistaTutte() {
         }
     });
 
-    // 2. Mettiamo il resto delle categorie eventuali subito dopo
     const chiaviResto = chiaviSito.filter(k => !k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviResto);
 
-    // 3. Le bibite vanno sempre ed esclusivamente per ultime
     const chiaviBibite = chiaviSito.filter(k => k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviBibite);
 
-    // 4. Avviamo il ciclo di disegno della pagina
-    for (const cat of ordineFinale) {
-        if (!raggruppati[cat]) continue;
+    // 2. ECCO LA MAGIA: Riempimento in verticale per salvare il Mobile
+    const categorieAttive = ordineFinale.filter(cat => raggruppati[cat]);
+    const itemsPerCol = Math.ceil(categorieAttive.length / 3);
+    let indexCorrente = 0;
+
+    for (const cat of categorieAttive) {
         let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;">
             <div class="header-cat-tabella">${cat}</div>
             <table class="tabella-tutte">
             <thead><tr><th>Articolo</th><th>Casta</th><th>Silea</th><th>Biban</th></tr></thead><tbody>`;
+        
         raggruppati[cat].items.forEach(ing => {
             const soglia = isWeekendDomani ? ing.we : ing.fer;
             const processaValore = (val) => {
@@ -130,9 +129,12 @@ function generaVistaTutte() {
         });
         catHTML += `</tbody></table></div>`;
 
-        // Distribuiamo le categorie a giro nelle 3 colonne
+        // Assegna in ordine sequenziale: prima riempie tutta la Colonna 0, poi la 1, poi la 2
+        let indexColonna = Math.floor(indexCorrente / itemsPerCol);
+        if (indexColonna > 2) indexColonna = 2;
         colonneHTML[indexColonna] += catHTML;
-        indexColonna = (indexColonna + 1) % 3;
+        
+        indexCorrente++;
     }
 
     h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[0]}</div>`;

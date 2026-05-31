@@ -90,7 +90,12 @@ function generaVistaTutte() {
     const colonneHTML = ["", "", ""];
     let indexColonna = 0;
 
-  for (const cat of ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", ...Object.keys(raggruppati).filter(c => !["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE"].includes(c))].filter(c => raggruppati[c])) {
+ for (const cat of Object.keys(raggruppati).sort((a, b) => {
+    const vip = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE"];
+    let pA = vip.findIndex(v => a.toUpperCase().trim().includes(v));
+    let pB = vip.findIndex(v => b.toUpperCase().trim().includes(v));
+    return (pA === -1 ? 999 : pA) - (pB === -1 ? 999 : pB);
+})) {
         let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;">
             <div class="header-cat-tabella">${cat}</div>
             <table class="tabella-tutte">

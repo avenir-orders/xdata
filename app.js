@@ -146,9 +146,9 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
             if (fornitoreSelezionato === "METRO") {
                 return (typeof listaMetro !== 'undefined' && listaMetro.includes(nomeLower)) || (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower));
             }
-            // Per Barbazza usa la lista già presente
+           // Per Barbazza usa la lista già presente + aggiungiamo le olive a mano
             if (fornitoreSelezionato === "BARBAZZA") {
-                return typeof listaBarbazza !== 'undefined' && listaBarbazza.includes(nomeLower);
+                return (typeof listaBarbazza !== 'undefined' && listaBarbazza.includes(nomeLower)) || nomeLower === "olive (buste)";
             }
             // Per gli altri fornitori usa il dizionario qui sopra
             if (fornitori[fornitoreSelezionato]) {

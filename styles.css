@@ -20,6 +20,7 @@ body {
     margin: 0;
     padding-bottom: 120px;
     line-height: 1.4;
+    backgorund-image: url('Pistacchio.jpg')
 }
 
 .header-box {

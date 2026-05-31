@@ -90,28 +90,30 @@ function generaVistaTutte() {
     const colonneHTML = ["", "", ""];
     let indexColonna = 0;
 
-const chiaviOrdinate = Object.keys(raggruppati).sort((a, b) => {
-        let nomeA = a.trim().toUpperCase();
-        let nomeB = b.trim().toUpperCase();
-        
-        // La regola d'oro per le bibite: sempre per ultime
-        if (nomeA === "BIBITE") return 1;
-        if (nomeB === "BIBITE") return -1;
-        
-        // L'ordine sacro che hai richiesto
-        const ordineEsatto = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI"];
-        
-        let posA = ordineEsatto.indexOf(nomeA);
-        let posB = ordineEsatto.indexOf(nomeB);
-        
-        // Se non sono nella lista sacra, finiscono dopo nel calderone
-        if (posA === -1) posA = 99;
-        if (posB === -1) posB = 99;
-        
-        return posA - posB;
+// --- ORDINAMENTO RIGOROSO E PULIZIA DEI VECCHI SALVATAGGI ---
+    const ordineSacro = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", "SCAFFALERIA", "IMPASTI", "IMBALLAGGI"];
+    const chiaviSito = Object.keys(raggruppati);
+    const ordineFinale = [];
+
+    // 1. Inseriamo le categorie principali nell'ordine esatto pulendo spazi e minuscole
+    ordineSacro.forEach(target => {
+        const chiaveVera = chiaviSito.find(k => k.trim().toUpperCase() === target);
+        if (chiaveVera) {
+            ordineFinale.push(chiaveVera);
+            chiaviSito.splice(chiaviSito.indexOf(chiaveVera), 1);
+        }
     });
 
-    for (const cat of chiaviOrdinate) {
+    // 2. Mettiamo il resto delle categorie eventuali subito dopo
+    const chiaviResto = chiaviSito.filter(k => !k.trim().toUpperCase().includes("BIBITE"));
+    ordineFinale.push(...chiaviResto);
+
+    // 3. Le bibite vanno sempre ed esclusivamente per ultime
+    const chiaviBibite = chiaviSito.filter(k => k.trim().toUpperCase().includes("BIBITE"));
+    ordineFinale.push(...chiaviBibite);
+
+    // 4. Avviamo il ciclo di disegno della pagina
+    for (const cat of ordineFinale) {
         if (!raggruppati[cat]) continue;
         let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;">
             <div class="header-cat-tabella">${cat}</div>

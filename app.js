@@ -68,7 +68,7 @@ function filtraLista() {
     catTitles.forEach(title => { title.style.display = (q === "") ? "block" : "none"; });
 }
 
-function generaVistaTutte() {
+function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     const cont = document.getElementById('contenitore-lista');
     cont.classList.add("vista-tabellare");
     const d_casta = JSON.parse(localStorage.getItem('inventario_dati_CASTA')) || {};
@@ -82,7 +82,22 @@ function generaVistaTutte() {
         raggruppati[ing.cat].items.push(ing);
     });
     
-    let h = `
+    // --- IL NUOVO MENU A TENDINA DEI FORNITORI ---
+    let selectFornitori = `
+        <select id="filtro-fornitori" onchange="generaVistaTutte(this.value)" style="width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:1px solid #e7e0d7; font-size:16px; background:white; color:var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <option value="TUTTI" ${fornitoreSelezionato === 'TUTTI' ? 'selected' : ''}>🛒 TUTTI I FORNITORI</option>
+            <option value="METRO" ${fornitoreSelezionato === 'METRO' ? 'selected' : ''}>METRO</option>
+            <option value="BARBAZZA" ${fornitoreSelezionato === 'BARBAZZA' ? 'selected' : ''}>BARBAZZA</option>
+            <option value="TONON" ${fornitoreSelezionato === 'TONON' ? 'selected' : ''}>TONON</option>
+            <option value="PIAN" ${fornitoreSelezionato === 'PIAN' ? 'selected' : ''}>PIAN</option>
+            <option value="RONCADESE" ${fornitoreSelezionato === 'RONCADESE' ? 'selected' : ''}>RONCADESE</option>
+            <option value="BORTOLATO" ${fornitoreSelezionato === 'BORTOLATO' ? 'selected' : ''}>BORTOLATO</option>
+            <option value="GHIACCIO FACILE" ${fornitoreSelezionato === 'GHIACCIO FACILE' ? 'selected' : ''}>GHIACCIO FACILE</option>
+            <option value="VOLPATO" ${fornitoreSelezionato === 'VOLPATO' ? 'selected' : ''}>VOLPATO</option>
+        </select>
+    `;
+
+    let h = selectFornitori + `
         <button onclick="scaricaScreenshot(this)" style="background:var(--primary); color:white; width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📸 SALVA COME IMMAGINE</button>
         <div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
 
@@ -107,18 +122,52 @@ function generaVistaTutte() {
     const chiaviBibite = chiaviSito.filter(k => k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviBibite);
 
-    // 2. ECCO LA MAGIA: Riempimento in verticale per salvare il Mobile
-    const categorieAttive = ordineFinale.filter(cat => raggruppati[cat]);
-    const itemsPerCol = Math.ceil(categorieAttive.length / 3);
-    let indexCorrente = 0;
+    // --- LE LISTE RIGOROSE DEI FORNITORI ---
+    const fornitori = {
+        "TONON": ["mozzarella in kg", "provola", "bufala (numero)"],
+        "PIAN": ["pancetta", "porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
+        "RONCADESE": ["salsiccia", "pancetta"],
+        "BORTOLATO": ["burrata"],
+        "GHIACCIO FACILE": ["ghiaccio"],
+        // Aggiunte piccole varianti con il punto (es. cass.cipolla) per evitare problemi col database
+        "VOLPATO": ["cass. datterino", "cass.datterino", "datt. giallo vaschette", "cass cipolla", "cass.cipolla", "basilico", "rucola", "melanzane crude", "zucchine crude", "peperoni crudi", "funghi crudi"]
+    };
 
-    for (const cat of categorieAttive) {
+    // Prepariamo i blocchi da stampare (Filtro intelligente)
+    let blocchiCategorie = [];
+
+    for (const cat of ordineFinale) {
+        if (!raggruppati[cat]) continue;
+        
+        let itemsFiltrati = raggruppati[cat].items.filter(ing => {
+            if (fornitoreSelezionato === "TUTTI") return true;
+            
+            let nomeLower = ing.nome.toLowerCase().trim();
+            
+            // Per Metro usa le due liste già presenti
+            if (fornitoreSelezionato === "METRO") {
+                return (typeof listaMetro !== 'undefined' && listaMetro.includes(nomeLower)) || (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower));
+            }
+            // Per Barbazza usa la lista già presente
+            if (fornitoreSelezionato === "BARBAZZA") {
+                return typeof listaBarbazza !== 'undefined' && listaBarbazza.includes(nomeLower);
+            }
+            // Per gli altri fornitori usa il dizionario qui sopra
+            if (fornitori[fornitoreSelezionato]) {
+                return fornitori[fornitoreSelezionato].includes(nomeLower);
+            }
+            return false;
+        });
+
+        // Se dopo il filtro la categoria non ha ingredienti per quel fornitore, la salta del tutto!
+        if (itemsFiltrati.length === 0) continue; 
+
         let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;">
             <div class="header-cat-tabella">${cat}</div>
             <table class="tabella-tutte">
             <thead><tr><th>Articolo</th><th>Casta</th><th>Silea</th><th>Biban</th></tr></thead><tbody>`;
         
-        raggruppati[cat].items.forEach(ing => {
+        itemsFiltrati.forEach(ing => {
             const soglia = isWeekendDomani ? ing.we : ing.fer;
             const processaValore = (val) => {
                 const n = estraiNumeroIntelligente(val);
@@ -128,14 +177,20 @@ function generaVistaTutte() {
             catHTML += `<tr><td class="td-nome">${ing.nome}</td><td>${processaValore(d_casta[ing.nome])}</td><td>${processaValore(d_silea[ing.nome])}</td><td>${processaValore(d_biban[ing.nome])}</td></tr>`;
         });
         catHTML += `</tbody></table></div>`;
+        
+        blocchiCategorie.push(catHTML);
+    }
 
-        // Assegna in ordine sequenziale: prima riempie tutta la Colonna 0, poi la 1, poi la 2
-        let indexColonna = Math.floor(indexCorrente / itemsPerCol);
+    // Distribuzione a cascata per proteggere la visualizzazione sul telefono
+    const itemsPerCol = Math.ceil(blocchiCategorie.length / 3);
+    let indexCorrente = 0;
+
+    blocchiCategorie.forEach(catHTML => {
+        let indexColonna = itemsPerCol > 0 ? Math.floor(indexCorrente / itemsPerCol) : 0;
         if (indexColonna > 2) indexColonna = 2;
         colonneHTML[indexColonna] += catHTML;
-        
         indexCorrente++;
-    }
+    });
 
     h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[0]}</div>`;
     h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[1]}</div>`;
@@ -144,7 +199,6 @@ function generaVistaTutte() {
     h += `</div>`;
     cont.innerHTML = h;
 }
-
 function scaricaScreenshot(btn) {
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Generazione in corso (attendi)...";

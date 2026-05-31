@@ -82,10 +82,10 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         raggruppati[ing.cat].items.push(ing);
     });
     
-    // --- IL NUOVO MENU A TENDINA DEI FORNITORI ---
+  // --- IL NUOVO MENU A TENDINA DEI FORNITORI ---
     let selectFornitori = `
         <select id="filtro-fornitori" onchange="generaVistaTutte(this.value)" style="width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:1px solid #e7e0d7; font-size:16px; background:white; color:var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <option value="TUTTI" ${fornitoreSelezionato === 'TUTTI' ? 'selected' : ''}>🛒 TUTTI I FORNITORI</option>
+            <option value="TUTTI" ${fornitoreSelezionato === 'TUTTI' ? 'selected' : ''}>FORNITORI</option>
             <option value="METRO" ${fornitoreSelezionato === 'METRO' ? 'selected' : ''}>METRO</option>
             <option value="BARBAZZA" ${fornitoreSelezionato === 'BARBAZZA' ? 'selected' : ''}>BARBAZZA</option>
             <option value="TONON" ${fornitoreSelezionato === 'TONON' ? 'selected' : ''}>TONON</option>
@@ -122,17 +122,15 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     const chiaviBibite = chiaviSito.filter(k => k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviBibite);
 
-    // --- LE LISTE RIGOROSE DEI FORNITORI ---
+  // --- LE LISTE RIGOROSE DEI FORNITORI ---
     const fornitori = {
-        "TONON": ["mozzarella in kg", "provola", "bufala (numero)"],
+        "TONON": ["mozzarella in kg", "provola", "provola aff.", "bufala (numero)"],
         "PIAN": ["pancetta", "porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
         "RONCADESE": ["salsiccia", "pancetta"],
         "BORTOLATO": ["burrata"],
         "GHIACCIO FACILE": ["ghiaccio"],
-        // Aggiunte piccole varianti con il punto (es. cass.cipolla) per evitare problemi col database
         "VOLPATO": ["cass. datterino", "cass.datterino", "datt. giallo vaschette", "cass cipolla", "cass.cipolla", "basilico", "rucola", "melanzane crude", "zucchine crude", "peperoni crudi", "funghi crudi"]
     };
-
     // Prepariamo i blocchi da stampare (Filtro intelligente)
     let blocchiCategorie = [];
 

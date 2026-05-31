@@ -479,3 +479,17 @@ window.onload = async function() {
     if(uP) document.getElementById('pizzeria').value = uP;
     await syncCloud();
 };
+// --- AGGIORNAMENTO AUTOMATICO AL RIENTRO NELL'APP ---
+document.addEventListener("visibilitychange", async function() {
+    if (document.visibilityState === "visible") {
+        // Avvisa visivamente che sta scaricando i dati nuovi
+        const status = document.getElementById('sync-status');
+        if (status) {
+            status.innerText = '🔄 Cerco aggiornamenti...';
+            status.style.color = 'var(--text-main)';
+        }
+        
+        // Scarica i dati dal cloud e ridisegna la pagina esatta in cui ti trovi
+        await syncCloud();
+    }
+});

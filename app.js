@@ -90,7 +90,11 @@ function generaVistaTutte() {
     const colonneHTML = ["", "", ""];
     let indexColonna = 0;
 
- for (const cat of Object.keys(raggruppati).sort((a, b) => {
+const ordinePizzerie = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", "SCAFFALERIA", "IMPASTI", "IMBALLAGGI", "BIBITE"];
+    const altreCat = Object.keys(raggruppati).filter(c => !ordinePizzerie.includes(c));
+    
+    for (const cat of ordinePizzerie.concat(altreCat)) {
+        if (!raggruppati[cat]) continue;
     const vip = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE"];
     let pA = vip.findIndex(v => a.toUpperCase().trim().includes(v));
     let pB = vip.findIndex(v => b.toUpperCase().trim().includes(v));

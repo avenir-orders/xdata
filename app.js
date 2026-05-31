@@ -90,9 +90,28 @@ function generaVistaTutte() {
     const colonneHTML = ["", "", ""];
     let indexColonna = 0;
 
-const ordine = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", "SCAFFALERIA", "IMPASTI", "IMBALLAGGI", "BIBITE"];
-    const tutte = [...new Set([...ordine, ...Object.keys(raggruppati)])];
-      for (const cat of tutte) {
+const chiaviOrdinate = Object.keys(raggruppati).sort((a, b) => {
+        let nomeA = a.trim().toUpperCase();
+        let nomeB = b.trim().toUpperCase();
+        
+        // La regola d'oro per le bibite: sempre per ultime
+        if (nomeA === "BIBITE") return 1;
+        if (nomeB === "BIBITE") return -1;
+        
+        // L'ordine sacro che hai richiesto
+        const ordineEsatto = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI"];
+        
+        let posA = ordineEsatto.indexOf(nomeA);
+        let posB = ordineEsatto.indexOf(nomeB);
+        
+        // Se non sono nella lista sacra, finiscono dopo nel calderone
+        if (posA === -1) posA = 99;
+        if (posB === -1) posB = 99;
+        
+        return posA - posB;
+    });
+
+    for (const cat of chiaviOrdinate) {
         if (!raggruppati[cat]) continue;
         let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;">
             <div class="header-cat-tabella">${cat}</div>

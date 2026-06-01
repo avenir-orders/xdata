@@ -398,3 +398,4 @@ async function eseguiSalva(forza = false) {
 
         cloudData['inventario_dati_'+p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] =
+ }

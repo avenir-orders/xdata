@@ -77,7 +77,9 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
 
     const raggruppati = {};
     ingredienti.forEach(ing => {
-        if (ing.cat === "VERDURE CRUDE") return; 
+       const raggruppati = {};
+    ingredienti.forEach(ing => {
+        if (!raggruppati[ing.cat]) raggruppati[ing.cat] = { color: ing.color, items: [] };
         if (!raggruppati[ing.cat]) raggruppati[ing.cat] = { color: ing.color, items: [] };
         raggruppati[ing.cat].items.push(ing);
     });
@@ -303,7 +305,7 @@ function creaLista() {
         if (ing.nome === "Lievito" && p !== "BIBAN") return;
         if (ing.nome === "Pel.Salsa" && p !== "CASTA") return;
         if (ing.nome === "Pelati Salsa" && p === "SILEA") return;
-        if (ing.cat === "VERDURE CRUDE" && (p !== "CASTA" || oraAttuale.getDay() !== 0)) return;
+       if (ing.cat === "VERDURE CRUDE" && p !== "CASTA") return;
         
        if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) return;
         if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && (p === "SILEA" || p === "BIBAN")) return;

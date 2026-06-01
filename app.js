@@ -142,9 +142,12 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
             
             let nomeLower = ing.nome.toLowerCase().trim();
             
-            // Per Metro usa le due liste già presenti
+            // Per Metro usa le due liste già presenti + forza le bibite nuove
             if (fornitoreSelezionato === "METRO") {
-                return (typeof listaMetro !== 'undefined' && listaMetro.includes(nomeLower)) || (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower));
+                const bibiteNuove = ["coca cola n.", "coca cola zero n.", "fanta n.", "ichnusa non filtrata n.", "pedavena n.", "acqua naturale n.", "acqua frizzante n."];
+                return (typeof listaMetro !== 'undefined' && listaMetro.includes(nomeLower)) || 
+                       (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower)) ||
+                       bibiteNuove.includes(nomeLower);
             }
            // Per Barbazza usa la lista già presente + aggiungiamo le olive a mano
             if (fornitoreSelezionato === "BARBAZZA") {

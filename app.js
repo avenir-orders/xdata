@@ -81,7 +81,6 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         raggruppati[ing.cat].items.push(ing);
     });
     
-    // --- IL NUOVO MENU A TENDINA DEI FORNITORI ---
     let selectFornitori = `
         <select id="filtro-fornitori" onchange="generaVistaTutte(this.value)" style="width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:1px solid #e7e0d7; font-size:16px; background:white; color:var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <option value="TUTTI" ${fornitoreSelezionato === 'TUTTI' ? 'selected' : ''}>FORNITORI</option>
@@ -101,8 +100,6 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         <div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
 
     const colonneHTML = ["", "", ""];
-
-    // 1. Definiamo il tuo ordine militare
     const ordineSacro = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", "SCAFFALERIA", "IMPASTI", "IMBALLAGGI"];
     const chiaviSito = Object.keys(raggruppati);
     const ordineFinale = [];
@@ -117,11 +114,9 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
 
     const chiaviResto = chiaviSito.filter(k => !k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviResto);
-
     const chiaviBibite = chiaviSito.filter(k => k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviBibite);
 
-    // --- LE LISTE RIGOROSE DEI FORNITORI ---
     const fornitori = {
         "TONON": ["mozzarella in kg", "provola", "provola aff.", "bufala (numero)"],
         "PIAN": ["porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
@@ -131,43 +126,30 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         "VOLPATO": ["cass. datterino", "cass.datterino", "datt. giallo vaschette", "cass cipolla", "cass.cipolla", "basilico", "rucola", "melanzane crude", "zucchine crude", "peperoni crudi", "funghi crudi"]
     };
     
-    // Prepariamo i blocchi da stampare (Filtro intelligente)
     let blocchiCategorie = [];
 
     for (const cat of ordineFinale) {
         if (!raggruppati[cat]) continue;
-        
         let itemsFiltrati = raggruppati[cat].items.filter(ing => {
             if (fornitoreSelezionato === "TUTTI") return true;
-            
             let nomeLower = ing.nome.toLowerCase().trim();
-            
-            // Per Metro usa le due liste già presenti + forza le bibite nuove
             if (fornitoreSelezionato === "METRO") {
                 const bibiteNuove = ["coca cola n.", "coca cola zero n.", "fanta n.", "ichnusa non filtrata n.", "pedavena n.", "acqua naturale n.", "acqua frizzante n."];
-                return (typeof listaMetro !== 'undefined' && listaMetro.includes(nomeLower)) || 
-                       (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower)) ||
-                       bibiteNuove.includes(nomeLower);
+                return (typeof listaMetro !== 'undefined' && listaMetro.includes(nomeLower)) || (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower)) || bibiteNuove.includes(nomeLower);
             }
-            // Per Barbazza usa la lista già presente + aggiungiamo le olive a mano
             if (fornitoreSelezionato === "BARBAZZA") {
                 return (typeof listaBarbazza !== 'undefined' && listaBarbazza.includes(nomeLower)) || nomeLower === "olive (buste)";
             }
-            // Per gli altri fornitori usa il dizionario qui sopra
             if (fornitori[fornitoreSelezionato]) {
                 return fornitori[fornitoreSelezionato].includes(nomeLower);
             }
             return false;
         });
 
-        // Se dopo il filtro la categoria non ha ingredienti per quel fornitore, la salta del tutto!
         if (itemsFiltrati.length === 0) continue; 
-
         let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;">
             <div class="header-cat-tabella">${cat}</div>
-            <table class="tabella-tutte">
-            <thead><tr><th>Articolo</th><th>Casta</th><th>Silea</th><th>Biban</th></tr></thead><tbody>`;
-        
+            <table class="tabella-tutte"><thead><tr><th>Articolo</th><th>Casta</th><th>Silea</th><th>Biban</th></tr></thead><tbody>`;
         itemsFiltrati.forEach(ing => {
             const soglia = isWeekendDomani ? ing.we : ing.fer;
             const processaValore = (val) => {
@@ -178,14 +160,11 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
             catHTML += `<tr><td class="td-nome">${ing.nome}</td><td>${processaValore(d_casta[ing.nome])}</td><td>${processaValore(d_silea[ing.nome])}</td><td>${processaValore(d_biban[ing.nome])}</td></tr>`;
         });
         catHTML += `</tbody></table></div>`;
-        
         blocchiCategorie.push(catHTML);
     }
 
-    // Distribuzione a cascata per proteggere la visualizzazione sul telefono
     const itemsPerCol = Math.ceil(blocchiCategorie.length / 3);
     let indexCorrente = 0;
-
     blocchiCategorie.forEach(catHTML => {
         let indexColonna = itemsPerCol > 0 ? Math.floor(indexCorrente / itemsPerCol) : 0;
         if (indexColonna > 2) indexColonna = 2;
@@ -196,7 +175,6 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[0]}</div>`;
     h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[1]}</div>`;
     h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[2]}</div>`;
-
     h += `</div>`;
     cont.innerHTML = h;
 }
@@ -205,40 +183,23 @@ function scaricaScreenshot(btn) {
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Generazione in corso (attendi)...";
     btn.disabled = true;
-
     const area = document.getElementById('area-da-fotografare');
-
     setTimeout(() => {
-        html2canvas(area, { 
-            scale: 1, 
-            backgroundColor: "#ffffff",
-            useCORS: true,
-            windowWidth: 1200,
-            onclone: function(clonedDoc) {
+        html2canvas(area, { scale: 1, backgroundColor: "#ffffff", useCORS: true, windowWidth: 1200, onclone: function(clonedDoc) {
                 const areaClone = clonedDoc.getElementById('area-da-fotografare');
-                areaClone.style.display = "flex";
-                areaClone.style.flexWrap = "wrap";
-                areaClone.style.width = "1200px";
-                areaClone.style.gap = "10px";
-                
+                areaClone.style.display = "flex"; areaClone.style.flexWrap = "wrap"; areaClone.style.width = "1200px"; areaClone.style.gap = "10px";
                 const colonne = areaClone.querySelectorAll('.colonna-fisica');
-                colonne.forEach(col => {
-                    col.style.width = "380px";
-                    col.style.flex = "0 0 380px"; 
-                });
+                colonne.forEach(col => { col.style.width = "380px"; col.style.flex = "0 0 380px"; });
             }
         }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            document.getElementById('img-risultato').src = imgData;
+            document.getElementById('img-risultato').src = canvas.toDataURL('image/png');
             document.getElementById('modal-screenshot').style.display = 'flex';
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            btn.innerHTML = originalText; btn.disabled = false;
         }).catch(err => {
             alert("Errore sul telefono. Riprova con una lista leggermente più corta.");
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            btn.innerHTML = originalText; btn.disabled = false;
         });
-    }, 500); 
+    }, 500);
 }
 
 function generaVistaArchivio() {
@@ -250,36 +211,21 @@ function generaVistaArchivio() {
     const d_silea = JSON.parse(localStorage.getItem(`inventario_dati_SILEA_${dataScelta}`)) || JSON.parse(localStorage.getItem(`inventario_dati_SILEA`)) || {};
     const d_biban = JSON.parse(localStorage.getItem(`inventario_dati_BIBAN_${dataScelta}`)) || JSON.parse(localStorage.getItem(`inventario_dati_BIBAN`)) || {};
     const raggruppati = {};
-    
     ingredienti.forEach(ing => {
-        if (ing.cat === "VERDURE CRUDE") return; 
         if (!raggruppati[ing.cat]) raggruppati[ing.cat] = { color: ing.color, items: [] };
         raggruppati[ing.cat].items.push(ing);
     });
-    
-    let h = `<div style="grid-column: 1/-1; text-align:center; padding:15px; font-weight:bold; color:var(--primary)">Archivio: ${dataScelta}</div>
-             <div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
-    
+    let h = `<div style="grid-column: 1/-1; text-align:center; padding:15px; font-weight:bold; color:var(--primary)">Archivio: ${dataScelta}</div><div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
     const colonneHTML = ["", "", ""];
     let indexColonna = 0;
-
     for (const cat in raggruppati) {
-        let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;">
-            <div class="header-cat-tabella">${cat}</div>
-            <table class="tabella-tutte">
-            <thead><tr><th>Articolo</th><th>Casta</th><th>Silea</th><th>Biban</th></tr></thead><tbody>`;
-        raggruppati[cat].items.forEach(ing => { h += `<tr><td class="td-nome">${ing.nome}</td><td>${d_casta[ing.nome] || "-"}</td><td>${d_silea[ing.nome] || "-"}</td><td>${d_biban[ing.nome] || "-"}</td></tr>`; });
+        let catHTML = `<div class="container-cat-tutte" style="background:#ffffff !important; border:1px solid #e7e0d7 !important; border-radius:10px; overflow:hidden; margin-bottom:15px; width:100%;"><div class="header-cat-tabella">${cat}</div><table class="tabella-tutte"><thead><tr><th>Articolo</th><th>Casta</th><th>Silea</th><th>Biban</th></tr></thead><tbody>`;
+        raggruppati[cat].items.forEach(ing => { catHTML += `<tr><td class="td-nome">${ing.nome}</td><td>${d_casta[ing.nome] || "-"}</td><td>${d_silea[ing.nome] || "-"}</td><td>${d_biban[ing.nome] || "-"}</td></tr>`; });
         catHTML += `</tbody></table></div>`;
-        
         colonneHTML[indexColonna] += catHTML;
         indexColonna = (indexColonna + 1) % 3;
     }
-
-    h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[0]}</div>`;
-    h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[1]}</div>`;
-    h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[2]}</div>`;
-
-    h += `</div>`;
+    h += `<div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[0]}</div><div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[1]}</div><div class="colonna-fisica" style="flex:1; min-width:300px; display:flex; flex-direction:column;">${colonneHTML[2]}</div></div>`;
     cont.innerHTML = h;
 }
 
@@ -302,8 +248,6 @@ function creaLista() {
         if (ing.nome === "Lievito" && p !== "BIBAN") return;
         if (ing.nome === "Pel.Salsa" && p !== "CASTA") return;
         if (ing.nome === "Pelati Salsa" && p === "SILEA") return;
-        if (ing.cat === "VERDURE CRUDE" && p !== "CASTA") return;
-        
         if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) return;
         if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && (p === "SILEA" || p === "BIBAN")) return;
         if (ing.cat !== currentCat) {
@@ -313,21 +257,9 @@ function creaLista() {
         const soglia = isWeekendDomani ? ing.we : ing.fer;
         const v = s[ing.nome] || "";
         const isCipolla = ing.nome === "cass.Cipolla";
-        
-        const limitAttr = ing.cat === "VASCHETTE"  ? ' maxlength="4" oninput="if(!/^(0(,(25?|3|5|7)?)?|1(,(25?|3|5|7)?)?|2(,(25?|3|5|7)?)?|3(,(25?|3|5|7)?)?|4(,(25?|3|5|7)?)?|5(,(25?|3|5|7)?)?|6(,(25?|3|5|7)?)?|7(,(25?|3|5|7)?)?|8(,(25?|3|5|7)?)?)?$/.test(this.value)) this.value = this.value.slice(0, -1);"' : '';
-
-        let inputHtml = isCipolla ? `
-            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px">
-                <div style="display:flex; align-items:center; gap:5px; font-size:10px; color:var(--secondary)">Sfuse <input type="text" inputmode="decimal" class="qty-input" style="height:32px; width:55px" id="sfuse-${i}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, 0, ${i}); document.getElementById('sel-${i}').value = (this.value/20).toFixed(2); valuta(${i}, ${soglia})"></div>
-                <input type="text" inputmode="decimal" class="qty-input" id="sel-${i}" placeholder="Qtà" value="${v}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, ${soglia}, ${i})">
-            </div>` : `
-            <input type="text" inputmode="decimal" class="qty-input" id="sel-${i}" placeholder="0" value="${v}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, ${soglia}, ${i})"${limitAttr}>`;
-        
-        cont.innerHTML += `
-            <div class="item ${v===''?'vuoto':''} ing-item" id="box-${i}" data-nome="${ing.nome.toLowerCase()}">
-                <div class="nome-container"><b>${ing.nome}</b><small>Minimo: ${soglia}</small></div>
-                <div>${inputHtml}</div>
-            </div>`;
+        const limitAttr = ing.cat === "VASCHETTE" ? ' maxlength="4" oninput="if(!/^(0(,(25?|3|5|7)?)?|1(,(25?|3|5|7)?)?|2(,(25?|3|5|7)?)?|3(,(25?|3|5|7)?)?|4(,(25?|3|5|7)?)?|5(,(25?|3|5|7)?)?|6(,(25?|3|5|7)?)?|7(,(25?|3|5|7)?)?|8(,(25?|3|5|7)?)?)?$/.test(this.value)) this.value = this.value.slice(0, -1);"' : '';
+        let inputHtml = isCipolla ? `<div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px"><div style="display:flex; align-items:center; gap:5px; font-size:10px; color:var(--secondary)">Sfuse <input type="text" inputmode="decimal" class="qty-input" style="height:32px; width:55px" id="sfuse-${i}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, 0, ${i}); document.getElementById('sel-${i}').value = (this.value/20).toFixed(2); valuta(${i}, ${soglia})"></div><input type="text" inputmode="decimal" class="qty-input" id="sel-${i}" placeholder="Qtà" value="${v}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, ${soglia}, ${i})"></div>` : `<input type="text" inputmode="decimal" class="qty-input" id="sel-${i}" placeholder="0" value="${v}" onkeydown="bloccaNonNumerici(event)" onchange="trasformaECalcola(this, ${soglia}, ${i})"${limitAttr}>`;
+        cont.innerHTML += `<div class="item ${v===''?'vuoto':''} ing-item" id="box-${i}" data-nome="${ing.nome.toLowerCase()}"><div class="nome-container"><b>${ing.nome}</b><small>Minimo: ${soglia}</small></div><div>${inputHtml}</div></div>`;
         if(v !== "") valuta(i, soglia);
     });
 }
@@ -338,14 +270,7 @@ function controllaESalva() {
     ingredienti.forEach((ing, i) => {
         const input = document.getElementById(`sel-${i}`);
         if (input && input.value.trim() === "") {
-            if (!(ing.nome === "Lievito" && p !== "BIBAN") && 
-                !(ing.nome === "Pel.Salsa" && p !== "CASTA") && 
-                !(ing.nome === "Pelati Salsa" && p === "SILEA") && 
-                !((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) && 
-                !((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && p === "SILEA") && 
-                !ing.noObbligo) { 
-                    vuoti.push(ing.nome); 
-            }
+            if (!(ing.nome === "Lievito" && p !== "BIBAN") && !(ing.nome === "Pel.Salsa" && p !== "CASTA") && !(ing.nome === "Pelati Salsa" && p === "SILEA") && !((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) && !((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && p === "SILEA") && !ing.noObbligo) { vuoti.push(ing.nome); }
         }
     });
     if (vuoti.length > 0) {
@@ -355,47 +280,92 @@ function controllaESalva() {
     } else { eseguiSalva(); }
 }
 
-function chiudiDialog() {
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('dialog-vuoti').style.display = 'none';
-}
+function chiudiDialog() { document.getElementById('overlay').style.display = 'none'; document.getElementById('dialog-vuoti').style.display = 'none'; }
 
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
     const d = {};
     const oggiStr = new Date().toISOString().split('T')[0];
-    
-    ingredienti.forEach((ing, i) => { 
-        const input = document.getElementById(`sel-${i}`); 
-        if(input) d[ing.nome] = input.value; 
-    });
-
+    ingredienti.forEach((ing, i) => { const input = document.getElementById(`sel-${i}`); if(input) d[ing.nome] = input.value; });
     const newDataString = JSON.stringify(d);
-
     localStorage.setItem('inventario_dati_'+p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
-
-    document.getElementById('sync-status').innerText = 'Recupero dati prima del salvataggio...';
-
+    document.getElementById('sync-status').innerText = 'Recupero dati...';
     try {
         let cloudData = {};
-        
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
-            headers: { 'X-Master-Key': API_KEY } 
-        });
-
-        if (resGet.ok) {
-            const fetched = await resGet.json();
-            if (fetched.record) {
-                cloudData = fetched.record;
-            }
-        } else {
-            console.warn("Recupero dati cloud fallito, uso i dati locali completi come fallback.");
-            for(let i=0; i<localStorage.length; i++) { 
-                cloudData[localStorage.key(i)] = localStorage.getItem(localStorage.key(i)); 
-            }
-        }
-
+        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+        if (resGet.ok) { const fetched = await resGet.json(); if (fetched.record) cloudData = fetched.record; }
+        else { for(let i=0; i<localStorage.length; i++) { cloudData[localStorage.key(i)] = localStorage.getItem(localStorage.key(i)); } }
         cloudData['inventario_dati_'+p] = newDataString;
-        cloudData[`inventario_dati_${p}_${oggiStr}`] =
- }
+        cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
+        await syncCloud(cloudData);
+        Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
+        chiudiDialog(); alert("✅ Report salvato!");
+    } catch (e) { console.error(e); alert("❌ Errore sync."); chiudiDialog(); }
+}
+
+async function syncCloud(data = null) {
+    const status = document.getElementById('sync-status');
+    try {
+        if (data) {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(data) });
+            if (!res.ok) throw new Error("Errore");
+            status.innerText = 'Sincronizzazione completata';
+        } else {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+            if (!res.ok) throw new Error(`Errore: ${res.status}`);
+            const cloudData = await res.json();
+            if(cloudData.record) { Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); status.innerText = '✅ Dati caricati'; }
+        }
+    } catch (e) { console.error(e); status.innerText = '❌ Offline'; status.style.color = 'var(--red-alert)'; } finally { creaLista(); }
+}
+
+function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
+function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }
+function azzeraLista() { if(confirm("Cancellare dati?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }
+
+function inviaWhatsApp() {
+    const p = document.getElementById('pizzeria').value;
+    let msg = "";
+    const processaLista = (pv, dataObj) => {
+        let msgPv = `*${pv}*\n`;
+        let haMancanze = false;
+        ingredienti.forEach((ing) => {
+            if (ing.cat === "VERDURE CRUDE") return;
+            if (ing.nome === "Lievito" && pv !== "BIBAN") return;
+            if (ing.nome === "Pel.Salsa" && pv !== "CASTA") return;
+            if (ing.nome === "Pelati Salsa" && pv === "SILEA") return;
+            if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (pv === "CASTA" || pv === "SILEA")) return;
+            if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && (pv === "SILEA" || pv === "BIBAN")) return;
+            const val = dataObj[ing.nome];
+            if (val !== undefined && val !== "") {
+                const v = estraiNumeroIntelligente(val);
+                const s = isWeekendDomani ? ing.we : ing.fer;
+                if (!isNaN(v) && v < s) { msgPv += `• ${ing.nome}: ${val}\n`; haMancanze = true; }
+            }
+        });
+        return haMancanze ? msgPv + "\n" : "";
+    };
+    if (p === "TUTTE") {
+        msg += `*REPORT MANCANZE*\n\n`;
+        ["CASTA", "SILEA", "BIBAN"].forEach(pv => { const s = localStorage.getItem('inventario_dati_' + pv); if(s) msg += processaLista(pv, JSON.parse(s)); });
+    } else {
+        msg += `*MANCANZE ${p}*\n\n`;
+        const s = localStorage.getItem('inventario_dati_' + p);
+        if(s) msg += processaLista(p, JSON.parse(s));
+    }
+    if (msg.trim() === "*REPORT MANCANZE*" || msg.trim() === `*MANCANZE ${p}*`) msg = `✅ Tutto OK per ${p === "TUTTE" ? "tutte" : p}`;
+    window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
+}
+
+window.onload = async function() {
+    const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+    document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;
+    const uP = localStorage.getItem('ultima_pizzeria');
+    if(uP) document.getElementById('pizzeria').value = uP;
+    await syncCloud();
+};
+
+document.addEventListener("visibilitychange", async function() {
+    if (document.visibilityState === "visible") await syncCloud();
+});

@@ -28,6 +28,7 @@ const ingredienti = [
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Gorgonzola", fer: 1, we: 1 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Asiago", fer: 0.3, we: 0.3 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Stracciatella", fer: 1, we: 3 },
+    { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Feta greca", fer: 1, we: 1 },
     { cat: "SALUMI", color: "var(--cat-salumi)", nome: "Salsiccia", fer: 2, we: 6 },
     { cat: "SALUMI", color: "var(--cat-salumi)", nome: "Pancetta", fer: 0.5, we: 0.5 },
     { cat: "SALUMI", color: "var(--cat-salumi)", nome: "Salamino num", fer: 2, we: 5 },

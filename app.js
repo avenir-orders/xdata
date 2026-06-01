@@ -77,14 +77,11 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
 
     const raggruppati = {};
     ingredienti.forEach(ing => {
-       const raggruppati = {};
-    ingredienti.forEach(ing => {
-        if (!raggruppati[ing.cat]) raggruppati[ing.cat] = { color: ing.color, items: [] };
         if (!raggruppati[ing.cat]) raggruppati[ing.cat] = { color: ing.color, items: [] };
         raggruppati[ing.cat].items.push(ing);
     });
     
-  // --- IL NUOVO MENU A TENDINA DEI FORNITORI ---
+    // --- IL NUOVO MENU A TENDINA DEI FORNITORI ---
     let selectFornitori = `
         <select id="filtro-fornitori" onchange="generaVistaTutte(this.value)" style="width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:1px solid #e7e0d7; font-size:16px; background:white; color:var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <option value="TUTTI" ${fornitoreSelezionato === 'TUTTI' ? 'selected' : ''}>FORNITORI</option>
@@ -124,7 +121,7 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     const chiaviBibite = chiaviSito.filter(k => k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviBibite);
 
-  // --- LE LISTE RIGOROSE DEI FORNITORI ---
+    // --- LE LISTE RIGOROSE DEI FORNITORI ---
     const fornitori = {
         "TONON": ["mozzarella in kg", "provola", "provola aff.", "bufala (numero)"],
         "PIAN": ["porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
@@ -133,6 +130,7 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         "GHIACCIO FACILE": ["ghiaccio"],
         "VOLPATO": ["cass. datterino", "cass.datterino", "datt. giallo vaschette", "cass cipolla", "cass.cipolla", "basilico", "rucola", "melanzane crude", "zucchine crude", "peperoni crudi", "funghi crudi"]
     };
+    
     // Prepariamo i blocchi da stampare (Filtro intelligente)
     let blocchiCategorie = [];
 
@@ -151,7 +149,7 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
                        (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower)) ||
                        bibiteNuove.includes(nomeLower);
             }
-           // Per Barbazza usa la lista già presente + aggiungiamo le olive a mano
+            // Per Barbazza usa la lista già presente + aggiungiamo le olive a mano
             if (fornitoreSelezionato === "BARBAZZA") {
                 return (typeof listaBarbazza !== 'undefined' && listaBarbazza.includes(nomeLower)) || nomeLower === "olive (buste)";
             }
@@ -202,6 +200,7 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     h += `</div>`;
     cont.innerHTML = h;
 }
+
 function scaricaScreenshot(btn) {
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Generazione in corso (attendi)...";
@@ -209,16 +208,14 @@ function scaricaScreenshot(btn) {
 
     const area = document.getElementById('area-da-fotografare');
 
-    // Mettiamo un momento di attesa per permettere al telefono di "focalizzare"
     setTimeout(() => {
         html2canvas(area, { 
-            scale: 1, // Ridotto per essere più leggero per la RAM del telefono
+            scale: 1, 
             backgroundColor: "#ffffff",
             useCORS: true,
             windowWidth: 1200,
             onclone: function(clonedDoc) {
                 const areaClone = clonedDoc.getElementById('area-da-fotografare');
-                // Forziamo il contenitore principale a essere un blocco unico e rigido
                 areaClone.style.display = "flex";
                 areaClone.style.flexWrap = "wrap";
                 areaClone.style.width = "1200px";
@@ -227,7 +224,7 @@ function scaricaScreenshot(btn) {
                 const colonne = areaClone.querySelectorAll('.colonna-fisica');
                 colonne.forEach(col => {
                     col.style.width = "380px";
-                    col.style.flex = "0 0 380px"; // Forza la larghezza esatta
+                    col.style.flex = "0 0 380px"; 
                 });
             }
         }).then(canvas => {
@@ -241,8 +238,9 @@ function scaricaScreenshot(btn) {
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
-    }, 500); // 500 millisecondi di pausa per far "respirare" il telefono
+    }, 500); 
 }
+
 function generaVistaArchivio() {
     const dataScelta = document.getElementById('archiveDate').value;
     if (!dataScelta) return;
@@ -284,6 +282,7 @@ function generaVistaArchivio() {
     h += `</div>`;
     cont.innerHTML = h;
 }
+
 function creaLista() {
     const cont = document.getElementById('contenitore-lista');
     const p = document.getElementById('pizzeria').value;
@@ -292,8 +291,6 @@ function creaLista() {
     document.getElementById('btn-azzera').style.display = (p && p !== "TUTTE" && p !== "ARCHIVIO") ? "block" : "none";
     document.getElementById('footer-btns').style.display = (p && p !== "ARCHIVIO") ? "flex" : "none";
     document.getElementById('save-btn').style.display = (p === "TUTTE") ? "none" : "block";
-    document.getElementById('search-box').style.display = (p && p !== "TUTTE" && p !== "ARCHIVIO") ? "block" : "none";
-    document.getElementById('date-picker-container').style.display = (p === "ARCHIVIO") ? "block" : "none";
     document.getElementById('search-box').style.display = (p && p !== "TUTTE" && p !== "ARCHIVIO") ? "block" : "none";
     document.getElementById('date-picker-container').style.display = (p === "ARCHIVIO") ? "block" : "none";
     if (p === "TUTTE") { generaVistaTutte(); return; }
@@ -305,9 +302,9 @@ function creaLista() {
         if (ing.nome === "Lievito" && p !== "BIBAN") return;
         if (ing.nome === "Pel.Salsa" && p !== "CASTA") return;
         if (ing.nome === "Pelati Salsa" && p === "SILEA") return;
-       if (ing.cat === "VERDURE CRUDE" && p !== "CASTA") return;
+        if (ing.cat === "VERDURE CRUDE" && p !== "CASTA") return;
         
-       if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) return;
+        if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) return;
         if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && (p === "SILEA" || p === "BIBAN")) return;
         if (ing.cat !== currentCat) {
             cont.innerHTML += `<div class="categoria-header cat-title">${ing.cat}</div>`;
@@ -400,153 +397,4 @@ async function eseguiSalva(forza = false) {
         }
 
         cloudData['inventario_dati_'+p] = newDataString;
-        cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
-
-        document.getElementById('sync-status').innerText = 'Salvataggio in corso...';
-        await syncCloud(cloudData);
-
-        Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
-
-        chiudiDialog();
-        alert("✅ Report salvato correttamente!");
-
-    } catch (e) {
-        console.error("Errore durante il salvataggio:", e);
-        alert("❌ Errore di sincronizzazione. I dati sono salvati sul dispositivo, ma c'è stato un problema col cloud.");
-        chiudiDialog();
-    }
-}
-
-async function syncCloud(data = null) {
-    const status = document.getElementById('sync-status');
-    try {
-        if (data) {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
-                body: JSON.stringify(data)
-            });
-            if (!res.ok) throw new Error("Errore salvataggio");
-            status.innerText = 'Sincronizzazione completata';
-        } else {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
-            if (!res.ok) throw new Error(`Errore server: ${res.status}`);
-            const cloudData = await res.json();
-            if(cloudData.record) {
-                Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key]));
-                status.innerText = '✅ Dati caricati';
-            } else {
-                throw new Error("Dati cloud vuoti o non validi");
-            }
-        }
-    } catch (e) { 
-        console.error("Errore Sync:", e);
-        status.innerText = '❌ Cloud non disp. (Modalità Offline)'; 
-        status.style.color = 'var(--red-alert)';
-    } finally {
-        creaLista(); 
-    }
-}
-
-function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
-
-function valuta(i, s) {
-    const input = document.getElementById(`sel-${i}`);
-    if(!input) return;
-    const v = estraiNumeroIntelligente(input.value);
-    document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`;
-}
-
-function azzeraLista() { if(confirm("Cancellare i dati inseriti per questo punto vendita?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }
-
-function inviaWhatsApp() {
-    const p = document.getElementById('pizzeria').value;
-    let msg = "";
-    
-    if (p === "TUTTE") {
-        msg += `*REPORT MANCANZE*\n\n`;
-        const puntiVendita = ["CASTA", "SILEA", "BIBAN"];
-        
-        puntiVendita.forEach(pv => {
-            const storedData = localStorage.getItem('inventario_dati_' + pv);
-            if (storedData) {
-                const d = JSON.parse(storedData);
-                let msgPv = `*${pv}*\n`;
-                let haMancanze = false;
-                
-                ingredienti.forEach((ing) => {
-                  const giorno = new Date().getDay();
-    if ((giorno === 5 || giorno === 6) && (ing.cat === "PASTA" || ing.cat === "VASCHETTE")) return;
-                    if (ing.nome === "Lievito" && pv !== "BIBAN") return;
-                    if (ing.nome === "Pel.Salsa" && pv !== "CASTA") return;
-                    if (ing.nome === "Pelati Salsa" && pv === "SILEA") return;
-                    if (ing.cat === "VERDURE CRUDE" && (pv !== "CASTA" || oraAttuale.getDay() !== 0)) return;
-                    if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (pv === "CASTA" || pv === "SILEA")) return;
-                    if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && (pv === "SILEA" || pv === "BIBAN")) return;
-                    
-                    const val = d[ing.nome];
-                    if (val !== undefined && val !== "") {
-                        const v = estraiNumeroIntelligente(val);
-                        const s = isWeekendDomani ? ing.we : ing.fer;
-                        if (!isNaN(v) && v < s) {
-                            msgPv += `• ${ing.nome}: ${val}\n`;
-                            haMancanze = true;
-                        }
-                    }
-                });
-                
-                if (haMancanze) {
-                    msg += msgPv + "\n";
-                }
-            }
-        });
-    } else {
-        // Singolo punto vendita
-        msg += `*MANCANZE ${p}*\n\n`;
-        ingredienti.forEach((ing, i) => {
-            if (ing.nome === "Lievito" && p !== "BIBAN") return;
-            if (ing.nome === "Pel.Salsa" && p !== "CASTA") return;
-            if (ing.nome === "Pelati Salsa" && p === "SILEA") return;
-            if (ing.cat === "VERDURE CRUDE" && (p !== "CASTA" || oraAttuale.getDay() !== 0)) return;
-            if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) return;
-            if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && (p === "SILEA" || p === "BIBAN")) return;
-
-            const input = document.getElementById(`sel-${i}`);
-            if (input && input.value !== "") {
-                const v = estraiNumeroIntelligente(input.value);
-                const s = isWeekendDomani ? ing.we : ing.fer;
-                if (!isNaN(v) && v < s) {
-                    msg += `• ${ing.nome}: ${input.value}\n`;
-                }
-            }
-        });
-    }
-    
-    if (msg.trim() === "" || msg.trim() === "*REPORT MANCANZE*" || msg.trim() === `*MANCANZE ${p}*`) {
-        msg = `✅ Tutto OK per ${p === "TUTTE" ? "tutte" : p}`;
-    }
-    
-    window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
-}
-window.onload = async function() {
-    const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-    const giornoDomani = nomiGiorni[domani.getDay()];
-    document.getElementById('info-giorno').innerHTML = `Lista per <b>${giornoDomani}</b> ${isWeekendDomani?'(FESTIVO)':''}`;
-    const uP = localStorage.getItem('ultima_pizzeria');
-    if(uP) document.getElementById('pizzeria').value = uP;
-    await syncCloud();
-};
-// --- AGGIORNAMENTO AUTOMATICO AL RIENTRO NELL'APP ---
-document.addEventListener("visibilitychange", async function() {
-    if (document.visibilityState === "visible") {
-        // Avvisa visivamente che sta scaricando i dati nuovi
-        const status = document.getElementById('sync-status');
-        if (status) {
-            status.innerText = '🔄 Cerco aggiornamenti...';
-            status.style.color = 'var(--text-main)';
-        }
-        
-        // Scarica i dati dal cloud e ridisegna la pagina esatta in cui ti trovi
-        await syncCloud();
-    }
-});
+        cloudData[`inventario_dati_${p}_${oggiStr}`] =

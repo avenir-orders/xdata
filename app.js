@@ -125,7 +125,7 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
   // --- LE LISTE RIGOROSE DEI FORNITORI ---
     const fornitori = {
         "TONON": ["mozzarella in kg", "provola", "provola aff.", "bufala (numero)"],
-        "PIAN": ["pancetta", "porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
+        "PIAN": ["porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
         "RONCADESE": ["salsiccia", "pancetta"],
         "BORTOLATO": ["burrata"],
         "GHIACCIO FACILE": ["ghiaccio"],

@@ -6,9 +6,9 @@ const listaMetro = ["ricotta", "no lattosio", "parmigiano 24m", "speck", "mortad
 const listaMetroBiban = ["patate fritte", "patate al forno", "olio evo"];
 
 const ingredienti = [
-    { cat: "PASTA", color: "var(--cat-pasta)", nome: "Palline normali", fer: 100, we: 250 },
+    { cat: "PASTA", color: "var(--cat-pasta)", nome: "Palline normali", fer: 100, we: 220 },
     { cat: "PASTA", color: "var(--cat-pasta)", nome: "Palline canapa", fer: 15, we: 30 },
-    { cat: "PASTA", color: "var(--cat-pasta)", nome: "Mezzi", fer: 2, we: 10 },
+    { cat: "PASTA", color: "var(--cat-pasta)", nome: "Mezzi", fer: 2, we: 8 },
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Melanzane", fer: 1, we: 2 },
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Zucchine", fer: 1, we: 2 },
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Peperoni", fer: 1, we: 2 },
@@ -53,10 +53,10 @@ const ingredienti = [
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Mais", fer: 1, we: 1 },
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Miele", fer: 1, we: 1 },
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Pelati Salsa", fer: 1, we: 2 },
-    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Datterino", fer: 1, we: 2 },
-    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Datt giallo", fer: 0.3, we: 0.3 },
-    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Cipolla", fer: 1, we: 1 },
-    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Rucola", fer: 1, we: 2 },
+    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Datterino", fer: 0.2, we: 1 },
+    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Datt giallo", fer: 0.2, we: 0.3 },
+    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Cipolla", fer: 0.2, we: 1 },
+    { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Rucola", fer: 0.7, we: 1.5 },
     { cat: "FRESCO", color: "var(--cat-fresco)", nome: "cass. Datterino", fer: 0.5, we: 1 },
     { cat: "FRESCO", color: "var(--cat-fresco)", nome: "Datt. Giallo vaschette", fer: 0.25, we: 0.5 },
     { cat: "FRESCO", color: "var(--cat-fresco)", nome: "cass.Cipolla", fer: 0.25, we: 0.25 },

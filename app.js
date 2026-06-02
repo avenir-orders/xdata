@@ -248,6 +248,7 @@ function creaLista() {
         if (ing.nome === "Lievito" && p !== "BIBAN") return;
         if (ing.nome === "Pel.Salsa" && p !== "CASTA") return;
         if (ing.nome === "Pelati Salsa" && p === "SILEA") return;
+        if (ing.cat === "VERDURE CRUDE" && p !== "CASTA") return;
         if ((ing.nome === "Ghiaccio" || ing.nome === "Canapa Bio") && (p === "CASTA" || p === "SILEA")) return;
         if ((ing.nome === "Olio Fritte" || ing.nome === "Patate Fritte" || ing.nome === "Patate al Forno") && (p === "SILEA" || p === "BIBAN")) return;
         if (ing.cat !== currentCat) {

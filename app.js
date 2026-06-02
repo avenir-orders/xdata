@@ -333,6 +333,7 @@ function inviaWhatsApp() {
         let haMancanze = false;
         ingredienti.forEach((ing) => {
             if (ing.cat === "VERDURE CRUDE") return;
+            if (ing.cat === "VASCHETTE") return;
             if (ing.nome === "Lievito" && pv !== "BIBAN") return;
             if (ing.nome === "Pel.Salsa" && pv !== "CASTA") return;
             if (ing.nome === "Pelati Salsa" && pv === "SILEA") return;

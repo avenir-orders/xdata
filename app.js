@@ -361,8 +361,6 @@ function inviaWhatsApp() {
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
     document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;
-    const uP = localStorage.getItem('ultima_pizzeria');
-    if(uP) document.getElementById('pizzeria').value = uP;
     await syncCloud();
 };
 

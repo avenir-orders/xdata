@@ -95,15 +95,19 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         </select>
     `;
 
-    let h = selectFornitori;
+   let h = selectFornitori;
 
     if (fornitoreSelezionato === "BARBAZZA") {
         h += `<button onclick="inviaOrdineBarbazza()" style="background:#25D366; color:white; width:100%; margin-bottom:10px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🟢 INVIA ORDINE BARBAZZA</button>`;
     }
 
-    h += `<button onclick="scaricaScreenshot(this)" style="background:var(--primary); color:white; width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📸 SALVA COME IMMAGINE</button>
-    <div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
+    if (fornitoreSelezionato === "TUTTI") {
+        h += `<button onclick="scaricaScreenshot(this)" style="background:var(--primary); color:white; width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📸 SALVA COME IMMAGINE</button>`;
+    }
 
+    h += `<div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
+
+   
     const colonneHTML = ["", "", ""];
     const ordineSacro = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", "SCAFFALERIA", "IMPASTI", "IMBALLAGGI"];
     const chiaviSito = Object.keys(raggruppati);

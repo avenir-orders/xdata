@@ -399,14 +399,15 @@ function inviaOrdineBarbazza() {
 
             // Regole standard generali
             const regoleStandard = [
+              // Regole standard generali
+            const regoleStandard = [
                 { nome: "Brie", soglia: 5 }, { nome: "Gorgonzola", soglia: 2 },
                 { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
                 { nome: "Acciughe", soglia: 2 }, { nome: "Tonno (latte)", soglia: 3 },
-                { nome: "Salmone", soglia: 15 }, { nome: "Capperi", soglia: 1 },
-                { nome: "Semola", soglia: 3 }, { nome: "Carta mani", soglia: 6 },
-                { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
+                { nome: "Capperi", soglia: 1 }, { nome: "Semola", soglia: 3 }, 
+                { nome: "Carta mani", soglia: 6 }, { nome: "Cart.med", soglia: 8 }, 
+                { nome: "Cart.mezzi", soglia: 2 }
             ];
-
             // Calcola ordini standard per sottrazione
             regoleStandard.forEach(r => {
                 let giacenza = calcolaGiacenza(d, r.nome);
@@ -418,7 +419,13 @@ function inviaOrdineBarbazza() {
             if (giacenzaCarciofi < 6) {
                 aggiungiAllOrdine("Carciofi (Scatola da 6)", 1);
             }
-
+            // Regola speciale: Salmone (Scatole da 10 per arrivare a ~15)
+            let giacenzaSalmone = calcolaGiacenza(d, "Salmone");
+            let scatoleSalmone = Math.round((15 - giacenzaSalmone) / 10);
+            
+            if (scatoleSalmone > 0) {
+                aggiungiAllOrdine("Salmone (Scatole da 10)", scatoleSalmone);
+            }
             // Regola speciale: Pelati Salsa (Solo CASTA, soglia 18)
             if (pv === "CASTA") {
                 let giacenzaPelati = calcolaGiacenza(d, "Pelati Salsa");

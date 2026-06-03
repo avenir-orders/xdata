@@ -373,14 +373,25 @@ function inviaOrdineBarbazza() {
     const puntiVendita = ["CASTA", "SILEA", "BIBAN"];
     let haQualcosa = false;
 
-    // Funzione interna per estrarre la quantità salvata
     const calcolaGiacenza = (d, nomeEsatto) => {
-        if (d[nomeEsatto] && d[nomeEsatto] !== "") {
+        if (d && d[nomeEsatto] && d[nomeEsatto] !== "") {
             const n = estraiNumeroIntelligente(d[nomeEsatto]);
             return isNaN(n) ? 0 : n;
         }
-        return 0; // se il campo è vuoto, considera che ci sia zero (ordina tutto)
+        return 0; // se vuoto, considera zero
     };
+
+    // Controllo silenzioso delle scorte di Tonno
+    let giacenzaTonno = {};
+    let pizzerieConSurplusTonno = [];
+    
+    puntiVendita.forEach(p => {
+        const datiPV = JSON.parse(localStorage.getItem('inventario_dati_' + p)) || {};
+        giacenzaTonno[p] = calcolaGiacenza(datiPV, "Tonno (latte)");
+        if (giacenzaTonno[p] > 6) {
+            pizzerieConSurplusTonno.push(p);
+        }
+    });
 
     puntiVendita.forEach(pv => {
         const storedData = localStorage.getItem('inventario_dati_' + pv);
@@ -399,15 +410,13 @@ function inviaOrdineBarbazza() {
 
             // Regole standard generali
             const regoleStandard = [
-              // Regole standard generali
-            const regoleStandard = [
                 { nome: "Brie", soglia: 5 }, { nome: "Gorgonzola", soglia: 2 },
                 { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
-                { nome: "Acciughe", soglia: 2 }, { nome: "Tonno (latte)", soglia: 3 },
-                { nome: "Capperi", soglia: 1 }, { nome: "Semola", soglia: 3 }, 
-                { nome: "Carta mani", soglia: 6 }, { nome: "Cart.med", soglia: 8 }, 
-                { nome: "Cart.mezzi", soglia: 2 }
+                { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1 },
+                { nome: "Semola", soglia: 3 }, { nome: "Carta mani", soglia: 6 },
+                { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
             ];
+
             // Calcola ordini standard per sottrazione
             regoleStandard.forEach(r => {
                 let giacenza = calcolaGiacenza(d, r.nome);
@@ -419,26 +428,37 @@ function inviaOrdineBarbazza() {
             if (giacenzaCarciofi < 6) {
                 aggiungiAllOrdine("Carciofi (Scatola da 6)", 1);
             }
+
             // Regola speciale: Salmone (Scatole da 10 per arrivare a ~15)
             let giacenzaSalmone = calcolaGiacenza(d, "Salmone");
             let scatoleSalmone = Math.round((15 - giacenzaSalmone) / 10);
-            
             if (scatoleSalmone > 0) {
                 aggiungiAllOrdine("Salmone (Scatole da 10)", scatoleSalmone);
             }
-            // Regola speciale: Pelati Salsa (Solo CASTA, soglia 18)
+
+            // --- Regola speciale: Tonno (latte) SILENZIOSA ---
+            let mioTonno = giacenzaTonno[pv];
+            if (mioTonno <= 2) { 
+                // Se c'è pochissimo tonno, controlla le altre pizzerie
+                if (pizzerieConSurplusTonno.length === 0) {
+                    // Nessun altro ha più di 6 latte, quindi ordiniamo la scatola
+                    aggiungiAllOrdine("Tonno (latte) [Scatola da 6]", 1);
+                }
+                // Se invece qualcuno ha surplus, l'app semplicemente salta l'ordine e non scrive nulla!
+            }
+
+            // Regola speciale: Pelati Salsa (Solo CASTA)
             if (pv === "CASTA") {
                 let giacenzaPelati = calcolaGiacenza(d, "Pelati Salsa");
                 aggiungiAllOrdine("Pelati Salsa", 18 - giacenzaPelati);
             }
 
-            // Regola speciale: Lievito (Solo BIBAN, soglia 1)
+            // Regola speciale: Lievito (Solo BIBAN)
             if (pv === "BIBAN") {
                 let giacenzaLievito = calcolaGiacenza(d, "Lievito");
                 aggiungiAllOrdine("Lievito", 1 - giacenzaLievito);
             }
 
-            // Se questa pizzeria ha almeno un articolo da ordinare, la aggiunge al testo
             if (haOrdinePv) {
                 msg += msgPv + "\n";
             }
@@ -450,9 +470,10 @@ function inviaOrdineBarbazza() {
         return;
     }
 
-    // Apre WhatsApp con il testo
+    // Apre WhatsApp
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
 }
+
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
     document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;

@@ -364,7 +364,84 @@ function inviaWhatsApp() {
     if (msg.trim() === "*REPORT MANCANZE*" || msg.trim() === `*MANCANZE ${p}*`) msg = `✅ Tutto OK per ${p === "TUTTE" ? "tutte" : p}`;
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
 }
+function inviaOrdineBarbazza() {
+    let msg = "*ORDINE BARBAZZA*\n\n";
+    const puntiVendita = ["CASTA", "SILEA", "BIBAN"];
+    let haQualcosa = false;
 
+    // Funzione interna per estrarre la quantità salvata
+    const calcolaGiacenza = (d, nomeEsatto) => {
+        if (d[nomeEsatto] && d[nomeEsatto] !== "") {
+            const n = estraiNumeroIntelligente(d[nomeEsatto]);
+            return isNaN(n) ? 0 : n;
+        }
+        return 0; // se il campo è vuoto, considera che ci sia zero (ordina tutto)
+    };
+
+    puntiVendita.forEach(pv => {
+        const storedData = localStorage.getItem('inventario_dati_' + pv);
+        if (storedData) {
+            const d = JSON.parse(storedData);
+            let msgPv = `*${pv}*\n`;
+            let haOrdinePv = false;
+
+            const aggiungiAllOrdine = (nome, daOrdinare) => {
+                if (daOrdinare > 0) {
+                    msgPv += `• ${nome}: ${Math.ceil(daOrdinare)}\n`;
+                    haOrdinePv = true;
+                    haQualcosa = true;
+                }
+            };
+
+            // Regole standard generali
+            const regoleStandard = [
+                { nome: "Brie", soglia: 5 }, { nome: "Gorgonzola", soglia: 2 },
+                { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
+                { nome: "Acciughe", soglia: 2 }, { nome: "Tonno (latte)", soglia: 3 },
+                { nome: "Salmone", soglia: 15 }, { nome: "Capperi", soglia: 1 },
+                { nome: "Semola", soglia: 3 }, { nome: "Carta mani", soglia: 6 },
+                { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
+            ];
+
+            // Calcola ordini standard per sottrazione
+            regoleStandard.forEach(r => {
+                let giacenza = calcolaGiacenza(d, r.nome);
+                aggiungiAllOrdine(r.nome, r.soglia - giacenza);
+            });
+
+            // Regola speciale: Carciofi (Scatole da 6)
+            let giacenzaCarciofi = calcolaGiacenza(d, "Carciofi");
+            if (giacenzaCarciofi < 6) {
+                aggiungiAllOrdine("Carciofi (Scatola da 6)", 1);
+            }
+
+            // Regola speciale: Pelati Salsa (Solo CASTA, soglia 18)
+            if (pv === "CASTA") {
+                let giacenzaPelati = calcolaGiacenza(d, "Pelati Salsa");
+                aggiungiAllOrdine("Pelati Salsa", 18 - giacenzaPelati);
+            }
+
+            // Regola speciale: Lievito (Solo BIBAN, soglia 1)
+            if (pv === "BIBAN") {
+                let giacenzaLievito = calcolaGiacenza(d, "Lievito");
+                aggiungiAllOrdine("Lievito", 1 - giacenzaLievito);
+            }
+
+            // Se questa pizzeria ha almeno un articolo da ordinare, la aggiunge al testo
+            if (haOrdinePv) {
+                msg += msgPv + "\n";
+            }
+        }
+    });
+
+    if (!haQualcosa) {
+        alert("Giacenze già sufficienti! Nessun ordine necessario per Barbazza in questo momento.");
+        return;
+    }
+
+    // Apre WhatsApp con il testo
+    window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
+}
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
     document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;

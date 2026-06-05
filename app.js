@@ -402,7 +402,7 @@ function inviaWhatsApp() {
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
 }
 function inviaOrdineBarbazza() {
-    let msg = "*ORDINE BARBAZZA*\n\n";
+    let msg = "";
     const puntiVendita = ["CASTA", "SILEA", "BIBAN"];
     let haQualcosa = false;
 

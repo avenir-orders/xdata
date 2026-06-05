@@ -47,27 +47,60 @@ function estraiNumeroIntelligente(t) {
 
 function filtraLista() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
-    const items = document.querySelectorAll('.ing-item');
-    const catTitles = document.querySelectorAll('.cat-title');
     const p = document.getElementById('pizzeria').value;
 
-    items.forEach(it => {
-        const nome = it.dataset.nome;
-        if (q === "barbazza") {
-            it.style.display = listaBarbazza.includes(nome) ? "flex" : "none";
-        } else if (q === "metro") {
-            let isMetro = listaMetro.includes(nome);
-            if (p === "BIBAN" && listaMetroBiban.includes(nome)) {
-                isMetro = true;
-            }
-            it.style.display = isMetro ? "flex" : "none";
-        } else if (q === "" || nome.includes(q)) {
-            it.style.display = "flex";
-        } else { it.style.display = "none"; }
-    });
-    catTitles.forEach(title => { title.style.display = (q === "") ? "block" : "none"; });
-}
+    if (p === "TUTTE") {
+        // --- LOGICA PER IL TABELLONE "TUTTE" ---
+        const righe = document.querySelectorAll('.tabella-tutte tbody tr');
+        const contenitoriCat = document.querySelectorAll('.container-cat-tutte');
 
+        // Mostra/Nasconde le singole righe della tabella
+        righe.forEach(riga => {
+            const nomeArticolo = riga.querySelector('.td-nome').innerText.toLowerCase();
+            if (q === "" || nomeArticolo.includes(q)) {
+                riga.style.display = ""; // Mostra
+            } else {
+                riga.style.display = "none"; // Nasconde
+            }
+        });
+
+        // Nasconde l'intero blocco della categoria (es. FORMAGGI) se tutte le sue righe sono nascoste
+        contenitoriCat.forEach(container => {
+            const righeVisibili = container.querySelectorAll('.tabella-tutte tbody tr:not([style*="display: none"])');
+            if (righeVisibili.length === 0) {
+                container.style.display = "none";
+            } else {
+                container.style.display = "";
+            }
+        });
+
+    } else {
+        // --- LOGICA CLASSICA PER LE SINGOLE PIZZERIE ---
+        const items = document.querySelectorAll('.ing-item');
+        const catTitles = document.querySelectorAll('.cat-title');
+
+        items.forEach(it => {
+            const nome = it.dataset.nome;
+            if (q === "barbazza") {
+                it.style.display = listaBarbazza.includes(nome) ? "flex" : "none";
+            } else if (q === "metro") {
+                let isMetro = listaMetro.includes(nome);
+                if (p === "BIBAN" && listaMetroBiban.includes(nome)) {
+                    isMetro = true;
+                }
+                it.style.display = isMetro ? "flex" : "none";
+            } else if (q === "" || nome.includes(q)) {
+                it.style.display = "flex";
+            } else { 
+                it.style.display = "none"; 
+            }
+        });
+        
+        catTitles.forEach(title => { 
+            title.style.display = (q === "") ? "block" : "none"; 
+        });
+    }
+}
 function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     const cont = document.getElementById('contenitore-lista');
     cont.classList.add("vista-tabellare");
@@ -246,7 +279,7 @@ function creaLista() {
     document.getElementById('btn-azzera').style.display = (p && p !== "TUTTE" && p !== "ARCHIVIO") ? "block" : "none";
     document.getElementById('footer-btns').style.display = (p && p !== "ARCHIVIO") ? "flex" : "none";
     document.getElementById('save-btn').style.display = (p === "TUTTE") ? "none" : "block";
-    document.getElementById('search-box').style.display = (p && p !== "TUTTE" && p !== "ARCHIVIO") ? "block" : "none";
+    document.getElementById('search-box').style.display = (p && p !== "ARCHIVIO") ? "block" : "none";
     document.getElementById('date-picker-container').style.display = (p === "ARCHIVIO") ? "block" : "none";
     if (p === "TUTTE") { generaVistaTutte(); return; }
     if (p === "ARCHIVIO") { generaVistaArchivio(); return; }

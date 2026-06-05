@@ -468,7 +468,12 @@ function inviaOrdineBarbazza() {
             if (scatoleSalmone > 0) {
                 aggiungiAllOrdine("Salmone (Scatole da 10)", scatoleSalmone);
             }
-
+            // Regola speciale: Olive (Secchi da 5 buste per arrivare a ~9)
+            let giacenzaOlive = calcolaGiacenza(d, "Olive");
+            let secchiOlive = Math.round((9 - giacenzaOlive) / 5);
+            if (secchiOlive > 0) {
+                aggiungiAllOrdine("Olive (Secchio da 5 buste)", secchiOlive);
+            }
             // --- Regola speciale: Tonno (latte) SILENZIOSA ---
             let mioTonno = giacenzaTonno[pv];
             if (mioTonno <= 2) { 

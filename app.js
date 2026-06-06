@@ -349,18 +349,30 @@ async function eseguiSalva(forza = false) {
 
 async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');
+    status.style.color = "#666666"; 
     try {
         if (data) {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(data) });
             if (!res.ok) throw new Error("Errore");
             status.innerText = 'Sincronizzazione completata';
+            status.style.color = "#25D366"; 
         } else {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
             if (!res.ok) throw new Error(`Errore: ${res.status}`);
             const cloudData = await res.json();
-            if(cloudData.record) { Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); status.innerText = '✅ Dati caricati'; }
+            if(cloudData.record) { 
+                Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); 
+                status.innerText = '✅ Dati caricati'; 
+                status.style.color = "#25D366"; 
+            }
         }
-    } catch (e) { console.error(e); status.innerText = '❌ Offline'; status.style.color = 'var(--red-alert)'; } finally { creaLista(); }
+    } catch (e) { 
+        console.error(e); 
+        status.innerText = '❌ Offline / Cloud non disponibile'; 
+        status.style.color = "red"; 
+    } finally { 
+        creaLista(); 
+    }
 }
 
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }

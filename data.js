@@ -1,5 +1,5 @@
-const BIN_ID = '6a032c1ec0954111d81145d6'; 
-const API_KEY = '$2a$10$n74BprduBaxkWLZ72Jok.uusA4D.MrzIci5phXRfa71Kr5fsLBJQu';
+const BIN_ID = '6a2d46e2f5f4af5e29eb6bd0'; 
+const API_KEY = '$2a$10$vcSHTf0HwRJD1HIf2G1PCOocZFh/Qv8q0Wx8rkneDNDJ3lXFAxWYO';
 
 const listaBarbazza = ["brie", "gorgonzola", "asiago", "acciughe", "tonno (latte)", "salmone", "bresaola", "carciofi", "olive", "capperi", "semola", "carta mani", "pelati salsa", "cart.med", "cart.mezzi", "lievito"];
 const listaMetro = ["ricotta", "no lattosio", "parmigiano 24m", "speck", "mortadella", "prosciutto crudo", "noci", "rot. comande", "rotoli pos", "rotoli scontrini", "spazzolaforno", "pellicola", "coca cola n.", "coca cola zero n.", "fanta n.", "ichnusa non filtrata n.", "pedavena n.", "acqua naturale n.", "acqua frizzante n."];

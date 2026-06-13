@@ -353,12 +353,18 @@ async function syncCloud(data = null) {
     try {
         if (data) {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(data) });
-            if (!res.ok) throw new Error("Errore");
+            if (!res.ok) {
+                alert("Errore invio Cloud. Codice: " + res.status);
+                throw new Error("Errore Cloud");
+            }
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
-            if (!res.ok) throw new Error(`Errore: ${res.status}`);
+            if (!res.ok) {
+                alert("Errore caricamento Cloud. Codice: " + res.status);
+                throw new Error(`Errore: ${res.status}`);
+            }
             const cloudData = await res.json();
             if(cloudData.record) { 
                 Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); 

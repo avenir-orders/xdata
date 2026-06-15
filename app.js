@@ -453,12 +453,11 @@ function inviaOrdineBarbazza() {
 
             const aggiungiAllOrdine = (nome, daOrdinare) => {
                 if (daOrdinare > 0) {
-                    msgPv += `• ${nome}: ${Math.ceil(daOrdinare)}\n`;
+                    msgPv += `${Math.ceil(daOrdinare)} ${nome}\n`;
                     haOrdinePv = true;
                     haQualcosa = true;
                 }
             };
-
             // Regole standard generali
             const regoleStandard = [
                 { nome: "Brie", soglia: 5 }, { nome: "Gorgonzola", soglia: 2 },

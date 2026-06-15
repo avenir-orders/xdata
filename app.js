@@ -465,7 +465,7 @@ function inviaOrdineBarbazza() {
                 { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
                 { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1 },
                 { nome: "Semola", soglia: pv === "SILEA" ? 2 : 3 },
-                { nome: "Carta mani", soglia: pv === "SILEA" ? 3 : 6 },
+                { nome: "Carta mani", soglia: pv === "SILEA" ? 3 : 4 },
                 { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
             ];
 

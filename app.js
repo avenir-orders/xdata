@@ -488,8 +488,8 @@ function inviaOrdineBarbazza() {
             // Regola speciale: Olive (Secchi da 5 buste per arrivare a ~9)
             let giacenzaOlive = calcolaGiacenza(d, "Olive");
             let secchiOlive = Math.round((5 - giacenzaOlive) / 5);
-            if (secchiOlive > 0) {
-                aggiungiAllOrdine("Olive (Secchio da 5 buste)", secchiOlive);
+           if (secchiOlive > 0) {
+                aggiungiAllOrdine("Olive", secchiOlive);
             }
             // --- Regola speciale: Tonno (latte) SILENZIOSA ---
             let mioTonno = giacenzaTonno[pv];

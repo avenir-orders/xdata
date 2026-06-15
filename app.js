@@ -458,7 +458,7 @@ function inviaOrdineBarbazza() {
                     haQualcosa = true;
                 }
             };
-           // Regole standard generali
+          // Regole standard generali
             const regoleStandard = [
                 { nome: "Brie", soglia: pv === "SILEA" ? 4 : 5 }, 
                 { nome: "Gorgonzola", soglia: pv === "SILEA" ? 2.5 : 3 },
@@ -466,7 +466,9 @@ function inviaOrdineBarbazza() {
                 { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1 },
                 { nome: "Semola", soglia: pv === "SILEA" ? 2 : 3 },
                 { nome: "Carta mani", soglia: pv === "SILEA" ? 3 : 4 },
-                { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
+                { nome: "Cart.med",  soglia: pv === "SILEA" ? 7 : 8  }, 
+                { nome: "Cart.mezzi", soglia: 2 },
+                { nome: "Tonno (latte)", soglia: pv === "SILEA" ? 3 : 5 }
             ];
 
             // Calcola ordini standard per sottrazione

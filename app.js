@@ -479,11 +479,11 @@ function inviaOrdineBarbazza() {
                 aggiungiAllOrdine("Carciofi (Scatola da 6)", 1);
             }
 
-            // Regola speciale: Salmone (Scatole da 10 per arrivare a ~15)
+           // Regola speciale: Salmone (Multipli di 5 per arrivare a ~15)
             let giacenzaSalmone = calcolaGiacenza(d, "Salmone");
-            let scatoleSalmone = Math.round((15 - giacenzaSalmone) / 10);
-            if (scatoleSalmone > 0) {
-                aggiungiAllOrdine("Salmone (Scatole da 10)", scatoleSalmone);
+            let confezioniSalmone = Math.round((15 - giacenzaSalmone) / 5) * 5;
+            if (confezioniSalmone > 0) {
+                aggiungiAllOrdine("Salmone", confezioniSalmone);
             }
             // Regola speciale: Olive (Secchi da 5 buste per arrivare a ~9)
             let giacenzaOlive = calcolaGiacenza(d, "Olive");

@@ -478,7 +478,7 @@ function inviaOrdineBarbazza() {
             // Regola speciale: Carciofi (Scatole da 6)
             let giacenzaCarciofi = calcolaGiacenza(d, "Carciofi");
             if (giacenzaCarciofi < 6) {
-                aggiungiAllOrdine("Carciofi (Scatola da 6)", 1);
+                aggiungiAllOrdine("Carciofi", 1);
             }
 
            // Regola speciale: Salmone (Multipli di 5 per arrivare a ~15)
@@ -491,7 +491,7 @@ function inviaOrdineBarbazza() {
             // Regola speciale: Tonno (Se <= 3 latte, ordina 1 scatola da 6)
             let giacenzaTonnoPV = calcolaGiacenza(d, "Tonno (latte)");
             if (giacenzaTonnoPV <= 3) {
-                aggiungiAllOrdine("Tonno scatola da 6", 1);
+                aggiungiAllOrdine("Tonno", 1);
             }
             // Regola speciale: Olive (Secchi da 5 buste per arrivare a ~9)
             let giacenzaOlive = calcolaGiacenza(d, "Olive");

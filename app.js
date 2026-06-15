@@ -461,10 +461,11 @@ function inviaOrdineBarbazza() {
            // Regole standard generali
             const regoleStandard = [
                 { nome: "Brie", soglia: pv === "SILEA" ? 4 : 5 }, 
-                { nome: "Gorgonzola", soglia: pv === "SILEA" ? 2.5 : 2 },
+                { nome: "Gorgonzola", soglia: pv === "SILEA" ? 2.5 : 3 },
                 { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
                 { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1 },
-                { nome: "Semola", soglia: 3 }, { nome: "Carta mani", soglia: pv === "SILEA" ? 3 : 6 },
+                { nome: "Semola", soglia: pv === "SILEA" ? 2 : 3 },
+                { nome: "Carta mani", soglia: pv === "SILEA" ? 3 : 6 },
                 { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
             ];
 

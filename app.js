@@ -495,17 +495,7 @@ function inviaOrdineBarbazza() {
            if (secchiOlive > 0) {
                 aggiungiAllOrdine("Olive", secchiOlive);
             }
-            // --- Regola speciale: Tonno (latte) SILENZIOSA ---
-            let mioTonno = giacenzaTonno[pv];
-            if (mioTonno <= 2) { 
-                // Se c'è pochissimo tonno, controlla le altre pizzerie
-                if (pizzerieConSurplusTonno.length === 0) {
-                    // Nessun altro ha più di 6 latte, quindi ordiniamo la scatola
-                    aggiungiAllOrdine("Tonno (latte) [Scatola da 6]", 1);
-                }
-                // Se invece qualcuno ha surplus, l'app semplicemente salta l'ordine e non scrive nulla!
-            }
-
+          
             // Regola speciale: Pelati Salsa (Solo CASTA)
             if (pv === "CASTA") {
                 let giacenzaPelati = calcolaGiacenza(d, "Pelati Salsa");

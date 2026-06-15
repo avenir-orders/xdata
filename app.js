@@ -460,9 +460,9 @@ function inviaOrdineBarbazza() {
             };
             // Regole standard generali
             const regoleStandard = [
-                { nome: "Brie", soglia: 5 }, { nome: "Gorgonzola", soglia: 2 },
+                { nome: "Brie", soglia: 5 }, { nome: "Gorgonzola", soglia: 3 },
                 { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
-                { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1 },
+                { nome: "Acciughe", soglia: 3 }, { nome: "Capperi", soglia: 2 },
                 { nome: "Semola", soglia: 3 }, { nome: "Carta mani", soglia: 6 },
                 { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
             ];

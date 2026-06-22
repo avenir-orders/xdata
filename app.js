@@ -7,7 +7,7 @@ function getPasqua(anno) {
 }
 
 function isFestivo(data) {
-    if (data.getDay() === 0) return true;
+if (data.getDay() === 0 || data.getDay() === 6) return true;
     const day = data.getDate(), month = data.getMonth() + 1;
     const festiviFissi = ["1-1", "6-1", "25-4", "1-5", "2-6", "15-8", "1-11", "8-12", "25-12", "26-12"];
     if (festiviFissi.includes(`${day}-${month}`)) return true;

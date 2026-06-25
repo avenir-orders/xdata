@@ -367,9 +367,12 @@ async function eseguiSalva(forza = false) {
         await syncCloud(cloudData);
         
         // RIPRISTINATO IL METODO ORIGINALE: aggiorna tutta la memoria per non far sfarfallare i numeri
-        Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
+       370     Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
         
-        chiudiDialog(); 
+        // Aggiungi questa riga qui sotto:
+        location.reload(); 
+        
+372     chiudiDialog();
         alert("✅ Report salvato!");
     } catch (e) { 
         console.error(e); 

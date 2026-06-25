@@ -328,36 +328,41 @@ function chiudiDialog() { document.getElementById('overlay').style.display = 'no
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
     const d = {};
-    const oggiStr = new Date().toISOString().split('T')[0];
-    ingredienti.forEach((ing, i) => { const input = document.getElementById(`sel-${i}`); if(input) d[ing.nome] = input.value; });
+    
+    ingredienti.forEach((ing, i) => { 
+        const input = document.getElementById(`sel-${i}`); 
+        if(input) d[ing.nome] = input.value; 
+    });
+    
     const newDataString = JSON.stringify(d);
-    localStorage.setItem('inventario_dati_'+p, newDataString);
-    localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
     document.getElementById('sync-status').innerText = 'Recupero dati...';
-            try {
-            let cloudData = {};
-            const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
-            
-            if (resGet.ok) { 
-                const fetched = await resGet.json(); 
-                if (fetched.record) cloudData = fetched.record; 
-            }
-
-            // Salva SOLO lo stato attuale della pizzeria, ignorando lo storico infinito
-            cloudData['inventario_dati_' + p] = newDataString;
-            
-            await syncCloud(cloudData);
-            
-            // Mantiene pulita la memoria del telefono salvando solo l'ultimo dato
-            localStorage.setItem('inventario_dati_' + p, newDataString);
-            
-            chiudiDialog(); 
-            alert("✅ Report salvato!");
-        } catch (e) { 
-            console.error(e); 
-            alert("❌ Errore sync."); 
-            chiudiDialog(); 
+    
+    try {
+        let cloudData = {};
+        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+        
+        if (resGet.ok) { 
+            const fetched = await resGet.json(); 
+            if (fetched.record) cloudData = fetched.record; 
         }
+
+        // Salva SOLO lo stato attuale della pizzeria
+        cloudData['inventario_dati_' + p] = newDataString;
+        
+        await syncCloud(cloudData);
+        
+        // Mantiene pulita la memoria del telefono salvando solo l'ultimo dato
+        localStorage.setItem('inventario_dati_' + p, newDataString);
+        
+        chiudiDialog(); 
+        alert("✅ Report salvato!");
+    } catch (e) { 
+        console.error(e); 
+        alert("❌ Errore sync."); 
+        chiudiDialog(); 
+    }
+}
+
 
 
 async function syncCloud(data = null) {

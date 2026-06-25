@@ -336,51 +336,28 @@ async function eseguiSalva(forza = false) {
     });
     
     const newDataString = JSON.stringify(d);
-    document.getElementById('sync-status').innerText = 'Recupero dati...';
     
     try {
         let cloudData = {};
-        
-        // Aggiunto un bypass anti-cache per scaricare istantaneamente i dati freschi dal cloud
+        // Carica dati freschi
         const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { headers: { 'X-Master-Key': API_KEY } });
-        
         if (resGet.ok) { 
             const fetched = await resGet.json(); 
             if (fetched.record) cloudData = fetched.record; 
-        } else {
-            // Ripristinato il salvataggio di emergenza originale
-            for(let i=0; i<localStorage.length; i++) { 
-                cloudData[localStorage.key(i)] = localStorage.getItem(localStorage.key(i)); 
-            }
         }
 
+        // Salva solo i dati di oggi senza cancellare lo storico per evitare blocchi
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Cestino automatico: cancella dal cloud i giorni passati per non bloccare i server
-        Object.keys(cloudData).forEach(key => {
-            if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
-                delete cloudData[key];
-            }
-        });
-
         await syncCloud(cloudData);
         
-        // RIPRISTINATO IL METODO ORIGINALE: aggiorna tutta la memoria per non far sfarfallare i numeri
-       370     Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
-        
-        // Aggiungi questa riga qui sotto:
-       // Aspetta mezzo secondo per dare tempo al cloud di aggiornarsi, poi ricarica
-        setTimeout(() => {
-            location.reload();
-        }, 500);
-        
-372     chiudiDialog();
-        alert("✅ Report salvato!");
+        // Aggiorna memoria locale e ricarica
+        localStorage.setItem('inventario_dati_' + p, newDataString);
+        location.reload(); 
     } catch (e) { 
         console.error(e); 
         alert("❌ Errore sync."); 
-        chiudiDialog(); 
     }
 }
 

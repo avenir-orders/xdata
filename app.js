@@ -334,18 +334,31 @@ async function eseguiSalva(forza = false) {
     localStorage.setItem('inventario_dati_'+p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
     document.getElementById('sync-status').innerText = 'Recupero dati...';
-    try {
-        let cloudData = {};
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
-        if (resGet.ok) { const fetched = await resGet.json(); if (fetched.record) cloudData = fetched.record; }
-        else { for(let i=0; i<localStorage.length; i++) { cloudData[localStorage.key(i)] = localStorage.getItem(localStorage.key(i)); } }
-        cloudData['inventario_dati_'+p] = newDataString;
-        cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
-        await syncCloud(cloudData);
-        Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
-        chiudiDialog(); alert("✅ Report salvato!");
-    } catch (e) { console.error(e); alert("❌ Errore sync."); chiudiDialog(); }
-}
+            try {
+            let cloudData = {};
+            const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+            
+            if (resGet.ok) { 
+                const fetched = await resGet.json(); 
+                if (fetched.record) cloudData = fetched.record; 
+            }
+
+            // Salva SOLO lo stato attuale della pizzeria, ignorando lo storico infinito
+            cloudData['inventario_dati_' + p] = newDataString;
+            
+            await syncCloud(cloudData);
+            
+            // Mantiene pulita la memoria del telefono salvando solo l'ultimo dato
+            localStorage.setItem('inventario_dati_' + p, newDataString);
+            
+            chiudiDialog(); 
+            alert("✅ Report salvato!");
+        } catch (e) { 
+            console.error(e); 
+            alert("❌ Errore sync."); 
+            chiudiDialog(); 
+        }
+
 
 async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');

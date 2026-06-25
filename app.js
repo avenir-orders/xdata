@@ -328,6 +328,7 @@ function chiudiDialog() { document.getElementById('overlay').style.display = 'no
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
     const d = {};
+    const oggiStr = new Date().toISOString().split('T')[0];
     
     ingredienti.forEach((ing, i) => { 
         const input = document.getElementById(`sel-${i}`); 
@@ -346,13 +347,22 @@ async function eseguiSalva(forza = false) {
             if (fetched.record) cloudData = fetched.record; 
         }
 
-        // Salva SOLO lo stato attuale della pizzeria
+        // 1. Aggiorna i dati generali e quelli specifici di OGGI
         cloudData['inventario_dati_' + p] = newDataString;
-        
+        cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
+
+        // 2. TRUCCO MAGICO: Cancella tutti i giorni precedenti dal cloud per non farlo bloccare!
+        Object.keys(cloudData).forEach(key => {
+            if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
+                delete cloudData[key];
+            }
+        });
+
         await syncCloud(cloudData);
         
-        // Mantiene pulita la memoria del telefono salvando solo l'ultimo dato
+        // 3. Aggiorna anche la memoria locale del telefono in modo perfetto
         localStorage.setItem('inventario_dati_' + p, newDataString);
+        localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
         
         chiudiDialog(); 
         alert("✅ Report salvato!");
@@ -362,7 +372,6 @@ async function eseguiSalva(forza = false) {
         chiudiDialog(); 
     }
 }
-
 
 
 async function syncCloud(data = null) {

@@ -340,18 +340,24 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+        
+        // Aggiunto un bypass anti-cache per scaricare istantaneamente i dati freschi dal cloud
+        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { headers: { 'X-Master-Key': API_KEY } });
         
         if (resGet.ok) { 
             const fetched = await resGet.json(); 
             if (fetched.record) cloudData = fetched.record; 
+        } else {
+            // Ripristinato il salvataggio di emergenza originale
+            for(let i=0; i<localStorage.length; i++) { 
+                cloudData[localStorage.key(i)] = localStorage.getItem(localStorage.key(i)); 
+            }
         }
 
-        // 1. Aggiorna i dati generali e quelli specifici di OGGI
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // 2. TRUCCO MAGICO: Cancella tutti i giorni precedenti dal cloud per non farlo bloccare!
+        // Cestino automatico: cancella dal cloud i giorni passati per non bloccare i server
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
@@ -360,9 +366,8 @@ async function eseguiSalva(forza = false) {
 
         await syncCloud(cloudData);
         
-        // 3. Aggiorna anche la memoria locale del telefono in modo perfetto
-        localStorage.setItem('inventario_dati_' + p, newDataString);
-        localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
+        // RIPRISTINATO IL METODO ORIGINALE: aggiorna tutta la memoria per non far sfarfallare i numeri
+        Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
         
         chiudiDialog(); 
         alert("✅ Report salvato!");
@@ -372,7 +377,6 @@ async function eseguiSalva(forza = false) {
         chiudiDialog(); 
     }
 }
-
 
 async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');

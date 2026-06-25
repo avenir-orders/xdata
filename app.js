@@ -336,65 +336,62 @@ async function eseguiSalva(forza = false) {
     });
     
     const newDataString = JSON.stringify(d);
+    document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
     try {
         let cloudData = {};
-        // Carica dati freschi
         const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { headers: { 'X-Master-Key': API_KEY } });
         if (resGet.ok) { 
             const fetched = await resGet.json(); 
             if (fetched.record) cloudData = fetched.record; 
         }
 
-        // Salva solo i dati di oggi senza cancellare lo storico per evitare blocchi
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
         await syncCloud(cloudData);
         
-        // Aggiorna memoria locale e ricarica
         localStorage.setItem('inventario_dati_' + p, newDataString);
-        location.reload(); 
+        localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
+        
+        chiudiDialog(); 
+        alert("✅ Report salvato!");
+        creaLista(); 
     } catch (e) { 
         console.error(e); 
         alert("❌ Errore sync."); 
+        chiudiDialog();
     }
 }
 
 async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');
+    if (!status) return;
+    
     status.style.color = "#666666"; 
     try {
         if (data) {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(data) });
-            if (!res.ok) {
-                alert("Errore invio Cloud. Codice: " + res.status);
-                throw new Error("Errore Cloud");
-            }
+            if (!res.ok) throw new Error("Errore Cloud");
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
-            if (!res.ok) {
-                alert("Errore caricamento Cloud. Codice: " + res.status);
-                throw new Error(`Errore: ${res.status}`);
-            }
-            const cloudData = await res.json();
-            if(cloudData.record) { 
-                Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); 
-                status.innerText = '✅ Dati caricati'; 
-                status.style.color = "#25D366"; 
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { headers: { 'X-Master-Key': API_KEY } });
+            if (res.ok) {
+                const cloudData = await res.json();
+                if(cloudData.record) { 
+                    Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); 
+                    status.innerText = '✅ Dati caricati'; 
+                }
             }
         }
     } catch (e) { 
-        console.error(e); 
-        status.innerText = '❌ Offline / Cloud non disponibile'; 
+        status.innerText = '❌ Offline'; 
         status.style.color = "red"; 
     } finally { 
         creaLista(); 
     }
 }
-
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }
 function azzeraLista() { if(confirm("Cancellare dati?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }

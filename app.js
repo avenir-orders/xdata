@@ -370,7 +370,10 @@ async function eseguiSalva(forza = false) {
        370     Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key]));
         
         // Aggiungi questa riga qui sotto:
-        location.reload(); 
+       // Aspetta mezzo secondo per dare tempo al cloud di aggiornarsi, poi ricarica
+        setTimeout(() => {
+            location.reload();
+        }, 500);
         
 372     chiudiDialog();
         alert("✅ Report salvato!");

@@ -176,7 +176,7 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
             if (fornitoreSelezionato === "TUTTI") return true;
             let nomeLower = ing.nome.toLowerCase().trim();
             if (fornitoreSelezionato === "METRO") {
-                const bibiteNuove = ["coca cola n.", "coca cola zero n.", "fanta n.", "ichnusa non filtrata n.", "pedavena n.", "acqua naturale n.", "acqua frizzante n."];
+                const bibiteNuove = ["stracciatella", "coca cola n.", "coca cola zero n.", "fanta n.", "ichnusa non filtrata n.", "pedavena n.", "acqua naturale n.", "acqua frizzante n."];
                 return (typeof listaMetro !== 'undefined' && listaMetro.includes(nomeLower)) || (typeof listaMetroBiban !== 'undefined' && listaMetroBiban.includes(nomeLower)) || bibiteNuove.includes(nomeLower);
             }
             if (fornitoreSelezionato === "BARBAZZA") {

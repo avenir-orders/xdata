@@ -476,8 +476,7 @@ function inviaOrdineBarbazza() {
                 { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
                 { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1 },
                 { nome: "Semola", soglia: pv === "SILEA" ? 2 : 3 },
-                { nome: "Carta mani", soglia: pv === "SILEA" ? 3 : 4 },
-                { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
+               { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
             ];
 
             // Calcola ordini standard per sottrazione
@@ -486,6 +485,16 @@ function inviaOrdineBarbazza() {
                 aggiungiAllOrdine(r.nome, r.soglia - giacenza);
             });
 
+            // Regola speciale: Carta mani (Pacchi da 2 rotoli)
+            // Silea: target 6 rotoli (3 pacchi). Casta/Biban: target 8 rotoli (4 pacchi).
+            let giacenzaCarta = calcolaGiacenza(d, "Carta mani");
+            let targetCarta = pv === "SILEA" ? 6 : 8; 
+            
+            if (giacenzaCarta < targetCarta) {
+                // Calcola quanti rotoli mancano, divide per 2 (rotoli a pacco) e arrotonda per eccesso
+                let pacchiCarta = Math.ceil((targetCarta - giacenzaCarta) / 2);
+                aggiungiAllOrdine("Carta mani", pacchiCarta);
+            }
             // Regola speciale: Carciofi (Scatole da 6)
             let giacenzaCarciofi = calcolaGiacenza(d, "Carciofi");
             if (giacenzaCarciofi < 6) {

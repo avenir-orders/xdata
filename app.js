@@ -349,18 +349,18 @@ async function eseguiSalva(forza = false) {
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // IL RITORNO DEL CESTINO: Pulisce il cloud per non fargli superare i limiti di peso
+        // Cestino: Pulisce il cloud per non fargli superare i limiti di peso
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
             }
         });
 
-        await syncCloud(cloudData);
-        
-        // La memoria si aggiorna SOLO se il cloud ha accettato i dati
+        // TRUCCO DI TEMPISMO: Aggiorniamo la memoria del telefono PRIMA di finire il sync!
         localStorage.setItem('inventario_dati_' + p, newDataString);
         localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
+
+        await syncCloud(cloudData);
         
         chiudiDialog(); 
         alert("✅ Report salvato!");
@@ -370,7 +370,6 @@ async function eseguiSalva(forza = false) {
         chiudiDialog();
     }
 }
-
 async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');
     if (!status) return;

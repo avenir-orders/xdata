@@ -349,17 +349,24 @@ async function eseguiSalva(forza = false) {
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
+        // IL RITORNO DEL CESTINO: Pulisce il cloud per non fargli superare i limiti di peso
+        Object.keys(cloudData).forEach(key => {
+            if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
+                delete cloudData[key];
+            }
+        });
+
         await syncCloud(cloudData);
         
+        // La memoria si aggiorna SOLO se il cloud ha accettato i dati
         localStorage.setItem('inventario_dati_' + p, newDataString);
         localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
         
         chiudiDialog(); 
         alert("✅ Report salvato!");
-        creaLista(); 
     } catch (e) { 
         console.error(e); 
-        alert("❌ Errore sync."); 
+        alert("❌ Errore Server: Il cloud ha rifiutato i dati. Riprova."); 
         chiudiDialog();
     }
 }
@@ -372,7 +379,7 @@ async function syncCloud(data = null) {
     try {
         if (data) {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(data) });
-            if (!res.ok) throw new Error("Errore Cloud");
+            if (!res.ok) throw new Error("Errore Cloud 403");
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
@@ -388,6 +395,7 @@ async function syncCloud(data = null) {
     } catch (e) { 
         status.innerText = '❌ Offline'; 
         status.style.color = "red"; 
+        if (data) throw e; // FONDAMENTALE: Comunica l'errore bloccando il falso "Salvato"
     } finally { 
         creaLista(); 
     }

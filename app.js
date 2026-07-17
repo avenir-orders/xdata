@@ -249,9 +249,10 @@ function generaVistaArchivio() {
     if (!dataScelta) return;
     const cont = document.getElementById('contenitore-lista');
     cont.classList.add("vista-tabellare");
-    const d_casta = JSON.parse(localStorage.getItem(`inventario_dati_CASTA_${dataScelta}`)) || JSON.parse(localStorage.getItem(`inventario_dati_CASTA`)) || {};
-    const d_silea = JSON.parse(localStorage.getItem(`inventario_dati_SILEA_${dataScelta}`)) || JSON.parse(localStorage.getItem(`inventario_dati_SILEA`)) || {};
-    const d_biban = JSON.parse(localStorage.getItem(`inventario_dati_BIBAN_${dataScelta}`)) || JSON.parse(localStorage.getItem(`inventario_dati_BIBAN`)) || {};
+   // Cerca SOLO i dati della data scelta. Se non ci sono, lascia l'oggetto vuoto {} senza pescare da oggi
+    const d_casta = JSON.parse(localStorage.getItem(`inventario_dati_CASTA_${dataScelta}`)) || {};
+    const d_silea = JSON.parse(localStorage.getItem(`inventario_dati_SILEA_${dataScelta}`)) || {};
+    const d_biban = JSON.parse(localStorage.getItem(`inventario_dati_BIBAN_${dataScelta}`)) || {};
     const raggruppati = {};
     ingredienti.forEach(ing => {
         if (!raggruppati[ing.cat]) raggruppati[ing.cat] = { color: ing.color, items: [] };

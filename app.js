@@ -341,7 +341,12 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { headers: { 'X-Master-Key': API_KEY } });
+        // REGOLE ANTI-PIGRIZIA TABLET AGGIUNTE QUI SOTTO
+        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
+            headers: { 'X-Master-Key': API_KEY, 'Cache-Control': 'no-cache' },
+            cache: 'no-store' 
+        });
+        
         if (resGet.ok) { 
             const fetched = await resGet.json(); 
             if (fetched.record) cloudData = fetched.record; 
@@ -350,14 +355,13 @@ async function eseguiSalva(forza = false) {
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Cestino: Pulisce il cloud per non fargli superare i limiti di peso
+        // Cestino per pulire il file
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
             }
         });
 
-        // TRUCCO DI TEMPISMO: Aggiorniamo la memoria del telefono PRIMA di finire il sync!
         localStorage.setItem('inventario_dati_' + p, newDataString);
         localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
 
@@ -371,6 +375,7 @@ async function eseguiSalva(forza = false) {
         chiudiDialog();
     }
 }
+
 async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');
     if (!status) return;
@@ -378,12 +383,24 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(data) });
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { 
+                method: 'PUT', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-Master-Key': API_KEY,
+                    'X-Bin-Versioning': 'false' // BLOCCO BACKUP: Il cloud non si ingolferà più!
+                }, 
+                body: JSON.stringify(data) 
+            });
             if (!res.ok) throw new Error("Errore Cloud 403");
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { headers: { 'X-Master-Key': API_KEY } });
+            // REGOLE ANTI-PIGRIZIA TABLET AGGIUNTE ANCHE QUI
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
+                headers: { 'X-Master-Key': API_KEY, 'Cache-Control': 'no-cache' },
+                cache: 'no-store'
+            });
             if (res.ok) {
                 const cloudData = await res.json();
                 if(cloudData.record) { 
@@ -395,7 +412,7 @@ async function syncCloud(data = null) {
     } catch (e) { 
         status.innerText = '❌ Offline'; 
         status.style.color = "red"; 
-        if (data) throw e; // FONDAMENTALE: Comunica l'errore bloccando il falso "Salvato"
+        if (data) throw e; 
     } finally { 
         creaLista(); 
     }

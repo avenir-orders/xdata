@@ -326,8 +326,7 @@ function controllaESalva() {
 
 function chiudiDialog() { document.getElementById('overlay').style.display = 'none'; document.getElementById('dialog-vuoti').style.display = 'none'; }
 
-const GIST_ID = "63a89a4ccba39737a1d3d7868c6f6a91"; 
-
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKYWNbfIyXW_lRfaT-LRA9l6LSfdnwhoQI80cTuZJBlrGuKKnQdIpWjbae_r_s6yNWFA/exec";
 
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
@@ -344,12 +343,10 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        const resGet = await fetch(`https://api.github.com/gists/${GIST_ID}?nocache=${new Date().getTime()}`);
+        const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`);
         if (resGet.ok) { 
             const fetched = await resGet.json(); 
-            if (fetched.files && fetched.files['inventario.json']) {
-                cloudData = JSON.parse(fetched.files['inventario.json'].content || "{}");
-            }
+            if (fetched) cloudData = fetched; 
         }
 
         cloudData['inventario_dati_' + p] = newDataString;
@@ -382,14 +379,20 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error("Errore Google Sheets");
+
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            const res = await fetch(`https://api.github.com/gists/${GIST_ID}?nocache=${new Date().getTime()}`);
-            if (!res.ok) throw new Error("Errore Gist");
-            const fetched = await res.json();
-            if (fetched.files && fetched.files['inventario.json']) {
-                const cloudData = JSON.parse(fetched.files['inventario.json'].content || "{}");
+            const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`);
+            if (!res.ok) throw new Error("Errore Google Sheets");
+            const cloudData = await res.json();
+            if (cloudData) { 
                 Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key])); 
                 status.innerText = '✅ Dati caricati'; 
                 status.style.color = "#25D366";

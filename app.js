@@ -341,8 +341,8 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        // PULITO: Solo il timestamp nell'URL per svegliare il tablet, zero opzioni cache vietate
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
+        // TOLTO "/latest": Leggiamo direttamente il file principale senza blocchi 403
+        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}?nocache=${new Date().getTime()}`, { 
             headers: { 'X-Master-Key': API_KEY }
         });
         
@@ -394,7 +394,8 @@ async function syncCloud(data = null) {
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
+            // TOLTO "/latest": Punta direttamente al contenitore principale
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}?nocache=${new Date().getTime()}`, { 
                 headers: { 'X-Master-Key': API_KEY }
             });
             if (!res.ok) {

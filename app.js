@@ -326,7 +326,7 @@ function controllaESalva() {
 
 function chiudiDialog() { document.getElementById('overlay').style.display = 'none'; document.getElementById('dialog-vuoti').style.display = 'none'; }
 
-const GIST_ID = 63a89a4ccba39737a1d3d7868c6f6a91
+const GIST_ID = "63a89a4ccba39737a1d3d7868c6f6a91"; 
 
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
@@ -354,7 +354,6 @@ async function eseguiSalva(forza = false) {
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Pulizia dello storico vecchio
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
@@ -382,9 +381,6 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            // Nota: Per scrivere sui Gist senza password esposte usiamo localStorage come backup sicuro, 
-            // oppure se preferisci la sync pura la gestiamo in un attimo. 
-            // Ma con questo sistema i dati sul telefono sono già al 100% al sicuro!
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
@@ -398,7 +394,8 @@ async function syncCloud(data = null) {
                 status.style.color = "#25D366";
             }
         }
-    } cat (e) { 
+    } catch (e) { 
+        console.error(e);
         status.innerText = '❌ Offline'; 
         status.style.color = "red"; 
         if (data) throw e; 

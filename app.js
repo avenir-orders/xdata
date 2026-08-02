@@ -341,8 +341,9 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
+        // Rimosso l'header Cache-Control che causava il 403: il timestamp nell'URL basta per il tablet
         const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
-            headers: { 'X-Master-Key': API_KEY, 'Cache-Control': 'no-cache' },
+            headers: { 'X-Master-Key': API_KEY },
             cache: 'no-store' 
         });
         
@@ -354,7 +355,7 @@ async function eseguiSalva(forza = false) {
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Cestino: pulisce le date vecchie per mantenere il file leggero
+        // Cestino: pulisce lo storico vecchio per non appesantire il file
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
@@ -395,10 +396,9 @@ async function syncCloud(data = null) {
             status.style.color = "#25D366"; 
         } else {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
-                headers: { 'X-Master-Key': API_KEY, 'Cache-Control': 'no-cache' },
+                headers: { 'X-Master-Key': API_KEY },
                 cache: 'no-store'
             });
-            // SE IL SERVER RIFIUTA, ORA LO DICIAMO SUBITO SENZA BLOCCARE L'APP
             if (!res.ok) {
                 throw new Error("Errore Server " + res.status);
             }

@@ -341,7 +341,6 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        // REGOLE ANTI-PIGRIZIA TABLET AGGIUNTE QUI SOTTO
         const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
             headers: { 'X-Master-Key': API_KEY, 'Cache-Control': 'no-cache' },
             cache: 'no-store' 
@@ -355,23 +354,23 @@ async function eseguiSalva(forza = false) {
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Cestino per pulire il file
+        // Cestino: pulisce le date vecchie per mantenere il file leggero
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
             }
         });
 
+        await syncCloud(cloudData);
+        
         localStorage.setItem('inventario_dati_' + p, newDataString);
         localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
-
-        await syncCloud(cloudData);
         
         chiudiDialog(); 
         alert("✅ Report salvato!");
     } catch (e) { 
         console.error(e); 
-        alert("❌ Errore Server: Il cloud ha rifiutato i dati. Riprova."); 
+        alert("❌ Errore di salvataggio: " + (e.message || "Riprova tra poco")); 
         chiudiDialog();
     }
 }
@@ -387,30 +386,32 @@ async function syncCloud(data = null) {
                 method: 'PUT', 
                 headers: { 
                     'Content-Type': 'application/json', 
-                    'X-Master-Key': API_KEY,
-                    'X-Bin-Versioning': 'false' // BLOCCO BACKUP: Il cloud non si ingolferà più!
+                    'X-Master-Key': API_KEY
                 }, 
                 body: JSON.stringify(data) 
             });
-            if (!res.ok) throw new Error("Errore Cloud 403");
+            if (!res.ok) throw new Error("Errore Cloud (Codice " + res.status + ")");
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            // REGOLE ANTI-PIGRIZIA TABLET AGGIUNTE ANCHE QUI
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
                 headers: { 'X-Master-Key': API_KEY, 'Cache-Control': 'no-cache' },
                 cache: 'no-store'
             });
-            if (res.ok) {
-                const cloudData = await res.json();
-                if(cloudData.record) { 
-                    Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); 
-                    status.innerText = '✅ Dati caricati'; 
-                }
+            // SE IL SERVER RIFIUTA, ORA LO DICIAMO SUBITO SENZA BLOCCARE L'APP
+            if (!res.ok) {
+                throw new Error("Errore Server " + res.status);
+            }
+            const cloudData = await res.json();
+            if (cloudData.record) { 
+                Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); 
+                status.innerText = '✅ Dati caricati'; 
+                status.style.color = "#25D366";
             }
         }
     } catch (e) { 
-        status.innerText = '❌ Offline'; 
+        console.error(e);
+        status.innerText = '❌ ' + (e.message || 'Offline / Errore di rete'); 
         status.style.color = "red"; 
         if (data) throw e; 
     } finally { 

@@ -327,7 +327,7 @@ function controllaESalva() {
 function chiudiDialog() { document.getElementById('overlay').style.display = 'none'; document.getElementById('dialog-vuoti').style.display = 'none'; }
 
 const GIST_ID = "63a89a4ccba39737a1d3d7868c6f6a91"; 
-const GITHUB_TOKEN = "";
+
 
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;

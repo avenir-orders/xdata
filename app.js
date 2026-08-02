@@ -341,10 +341,9 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        // Rimosso l'header Cache-Control che causava il 403: il timestamp nell'URL basta per il tablet
+        // PULITO: Solo il timestamp nell'URL per svegliare il tablet, zero opzioni cache vietate
         const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
-            headers: { 'X-Master-Key': API_KEY },
-            cache: 'no-store' 
+            headers: { 'X-Master-Key': API_KEY }
         });
         
         if (resGet.ok) { 
@@ -396,8 +395,7 @@ async function syncCloud(data = null) {
             status.style.color = "#25D366"; 
         } else {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
-                headers: { 'X-Master-Key': API_KEY },
-                cache: 'no-store'
+                headers: { 'X-Master-Key': API_KEY }
             });
             if (!res.ok) {
                 throw new Error("Errore Server " + res.status);

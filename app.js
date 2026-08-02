@@ -341,8 +341,8 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        // TOLTO "/latest": Leggiamo direttamente il file principale senza blocchi 403
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}?nocache=${new Date().getTime()}`, { 
+        // LETTURA: Tassativo usare /latest per evitare l'errore 403 su JSONBin v3
+        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
             headers: { 'X-Master-Key': API_KEY }
         });
         
@@ -354,7 +354,7 @@ async function eseguiSalva(forza = false) {
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Cestino: pulisce lo storico vecchio per non appesantire il file
+        // Cestino: mantiene il file leggero eliminando le date vecchie
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
@@ -394,10 +394,11 @@ async function syncCloud(data = null) {
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            // TOLTO "/latest": Punta direttamente al contenitore principale
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}?nocache=${new Date().getTime()}`, { 
+            // LETTURA INIZIALE: Uso di /latest e intestazione standard per evitare blocco CORS/403
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
                 headers: { 'X-Master-Key': API_KEY }
             });
+            
             if (!res.ok) {
                 throw new Error("Errore Server " + res.status);
             }
@@ -409,8 +410,9 @@ async function syncCloud(data = null) {
             }
         }
     } catch (e) { 
-        console.error(e);
-        status.innerText = '❌ ' + (e.message || 'Offline / Errore di rete'); 
+        console.error("Errore sincronizzazione:", e);
+        // Fallback: se il cloud dà errore, avvisa ma permette comunque di usare l'app con i dati locali
+        status.innerText = '❌ ' + (e.message || 'Offline'); 
         status.style.color = "red"; 
         if (data) throw e; 
     } finally { 

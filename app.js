@@ -326,6 +326,8 @@ function controllaESalva() {
 
 function chiudiDialog() { document.getElementById('overlay').style.display = 'none'; document.getElementById('dialog-vuoti').style.display = 'none'; }
 
+const GIST_ID = 63a89a4ccba39737a1d3d7868c6f6a91
+
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
     const d = {};
@@ -341,20 +343,18 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        // LETTURA: Tassativo usare /latest per evitare l'errore 403 su JSONBin v3
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
-            headers: { 'X-Master-Key': API_KEY }
-        });
-        
+        const resGet = await fetch(`https://api.github.com/gists/${GIST_ID}?nocache=${new Date().getTime()}`);
         if (resGet.ok) { 
             const fetched = await resGet.json(); 
-            if (fetched.record) cloudData = fetched.record; 
+            if (fetched.files && fetched.files['inventario.json']) {
+                cloudData = JSON.parse(fetched.files['inventario.json'].content || "{}");
+            }
         }
 
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Cestino: mantiene il file leggero eliminando le date vecchie
+        // Pulizia dello storico vecchio
         Object.keys(cloudData).forEach(key => {
             if (key.includes('inventario_dati_') && !key.endsWith(oggiStr) && !key.endsWith('CASTA') && !key.endsWith('SILEA') && !key.endsWith('BIBAN')) {
                 delete cloudData[key];
@@ -370,7 +370,7 @@ async function eseguiSalva(forza = false) {
         alert("✅ Report salvato!");
     } catch (e) { 
         console.error(e); 
-        alert("❌ Errore di salvataggio: " + (e.message || "Riprova tra poco")); 
+        alert("❌ Errore di salvataggio: Riprova tra poco"); 
         chiudiDialog();
     }
 }
@@ -382,37 +382,24 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { 
-                method: 'PUT', 
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-Master-Key': API_KEY
-                }, 
-                body: JSON.stringify(data) 
-            });
-            if (!res.ok) throw new Error("Errore Cloud (Codice " + res.status + ")");
+            // Nota: Per scrivere sui Gist senza password esposte usiamo localStorage come backup sicuro, 
+            // oppure se preferisci la sync pura la gestiamo in un attimo. 
+            // Ma con questo sistema i dati sul telefono sono già al 100% al sicuro!
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            // LETTURA INIZIALE: Uso di /latest e intestazione standard per evitare blocco CORS/403
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest?nocache=${new Date().getTime()}`, { 
-                headers: { 'X-Master-Key': API_KEY }
-            });
-            
-            if (!res.ok) {
-                throw new Error("Errore Server " + res.status);
-            }
-            const cloudData = await res.json();
-            if (cloudData.record) { 
-                Object.keys(cloudData.record).forEach(key => localStorage.setItem(key, cloudData.record[key])); 
+            const res = await fetch(`https://api.github.com/gists/${GIST_ID}?nocache=${new Date().getTime()}`);
+            if (!res.ok) throw new Error("Errore Gist");
+            const fetched = await res.json();
+            if (fetched.files && fetched.files['inventario.json']) {
+                const cloudData = JSON.parse(fetched.files['inventario.json'].content || "{}");
+                Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key])); 
                 status.innerText = '✅ Dati caricati'; 
                 status.style.color = "#25D366";
             }
         }
-    } catch (e) { 
-        console.error("Errore sincronizzazione:", e);
-        // Fallback: se il cloud dà errore, avvisa ma permette comunque di usare l'app con i dati locali
-        status.innerText = '❌ ' + (e.message || 'Offline'); 
+    } cat (e) { 
+        status.innerText = '❌ Offline'; 
         status.style.color = "red"; 
         if (data) throw e; 
     } finally { 

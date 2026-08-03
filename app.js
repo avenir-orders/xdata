@@ -397,10 +397,14 @@ async function syncCloud(data = null) {
         }
     } catch (e) { 
         console.error("Errore Sync:", e);
-        // Se non riesce la sincronizzazione di background, non mostriamo popup di blocco
+        // In caso di errore di rete, salva comunque e avvisa in verde
         status.innerText = '✅ Salvato in locale'; 
         status.style.color = "#25D366"; 
-    } text = '';
+    } finally {
+        if (typeof creaLista === 'function') {
+            creaLista();
+        }
+    }
 }
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }

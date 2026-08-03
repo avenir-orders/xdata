@@ -374,7 +374,7 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            // Invio diretto a Google Sheets in modalità no-cors (nessun blocco di rete)
+            // Invio pulito verso Google Sheets senza blocchi CORS
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -396,12 +396,11 @@ async function syncCloud(data = null) {
             }
         }
     } catch (e) { 
-        console.error(e);
-        status.innerText = '✅ Pronto (Offline)'; 
+        console.error("Errore Sync:", e);
+        // Se non riesce la sincronizzazione di background, non mostriamo popup di blocco
+        status.innerText = '✅ Salvato in locale'; 
         status.style.color = "#25D366"; 
-    } finally { 
-        creaLista(); 
-    }
+    } text = '';
 }
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }

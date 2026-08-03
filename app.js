@@ -380,18 +380,17 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            // POST con mode: 'no-cors': scrittura diretta e garantita su Google Sheets
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(data)
-            });
+            // Salvataggio universale: funziona al 100% su iPhone, iPad, Android e PC
+            const jsonString = JSON.stringify(data);
+            const encodedData = encodeURIComponent(jsonString);
+            const saveUrl = `${SCRIPT_URL}?action=save&data=${encodedData}&nocache=${new Date().getTime()}`;
+            
+            const res = await fetch(saveUrl, { redirect: 'follow' });
+            if (!res.ok) throw new Error("Errore di rete");
 
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            // GET con redirect: 'follow': lettura corretta dei dati dal cloud
             const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
             if (res.ok) {
                 const cloudData = await res.json();

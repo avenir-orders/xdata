@@ -344,24 +344,21 @@ async function eseguiSalva(forza = false) {
     try {
         let cloudData = {};
 
-        // Prepariamo le chiavi da aggiornare
+        // Prepariamo i dati
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Inviamo direttamente al server di Google Sheets
-        await syncCloud(cloudData);
-        
-        // Salviamo anche in memoria locale come backup immediato
+        // Salvataggio immediato in locale per sicurezza massima
         localStorage.setItem('inventario_dati_' + p, newDataString);
         localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
+
+        // Inviamo a Google Sheets
+        await syncCloud(cloudData);
         
         chiudiDialog(); 
         alert("✅ Report salvato!");
     } catch (e) { 
-        console.error(e); 
-        // Se anche c'è un blocco di rete, salviamo comunque in locale per non perdere nulla
-        localStorage.setItem('inventario_dati_' + p, newDataString);
-        localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
+        console.error("Errore salva:", e); 
         chiudiDialog();
         alert("✅ Salvato sul dispositivo!");
     }
@@ -397,7 +394,7 @@ async function syncCloud(data = null) {
         }
     } catch (e) { 
         console.error("Errore Sync:", e);
-        // In caso di errore di rete, salva comunque e avvisa in verde
+        // In caso di errore di rete, mostra comunque uno stato positivo
         status.innerText = '✅ Salvato in locale'; 
         status.style.color = "#25D366"; 
     } finally {

@@ -341,22 +341,29 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
+    // 1. SALVIAMO SUBITO IN LOCALE PER NON PERDERE MAI I DATI
+    localStorage.setItem('inventario_dati_' + p, newDataString);
+    localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
+    
     try {
         let cloudData = {};
 
-        // Prepariamo i dati
+        // 2. SCARICIAMO I DATI REALMENTE PRESENTI SU GOOGLE PER NON SOVRASCRIVERE GLI ALTRI
+        const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
+        if (resGet.ok) {
+            const fetched = await resGet.json();
+            if (fetched && typeof fetched === 'object') cloudData = fetched;
+        }
+
+        // 3. AGGIORNIAMO SOLO IL NOSTRO PUNTO VENDITA
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // Salvataggio immediato in locale per sicurezza massima
-        localStorage.setItem('inventario_dati_' + p, newDataString);
-        localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
-
-        // Inviamo a Google Sheets
+        // 4. MANDIAMO TUTTO AL FOGLIO GOOGLE
         await syncCloud(cloudData);
         
         chiudiDialog(); 
-        alert("✅ Report salvato!");
+        alert("✅ Report salvato e condiviso con tutti i dispositivi!");
     } catch (e) { 
         console.error("Errore salva:", e); 
         chiudiDialog();
@@ -371,10 +378,10 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            // Invio pulito verso Google Sheets senza blocchi CORS
+            // Invio standard con redirect per avere la certezza della scrittura
             await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
+                redirect: 'follow',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(data)
             });
@@ -386,7 +393,9 @@ async function syncCloud(data = null) {
             if (res.ok) {
                 const cloudData = await res.json();
                 if (cloudData && typeof cloudData === 'object') { 
-                    Object.keys(cloudData).forEach(key => localStorage.setItem(key, cloudData[key])); 
+                    Object.keys(cloudData).forEach(key => {
+                        if(cloudData[key]) localStorage.setItem(key, cloudData[key]);
+                    }); 
                     status.innerText = '✅ Dati caricati'; 
                     status.style.color = "#25D366";
                 }
@@ -394,7 +403,6 @@ async function syncCloud(data = null) {
         }
     } catch (e) { 
         console.error("Errore Sync:", e);
-        // In caso di errore di rete, mostra comunque uno stato positivo
         status.innerText = '✅ Salvato in locale'; 
         status.style.color = "#25D366"; 
     } finally {

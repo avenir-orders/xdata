@@ -341,31 +341,29 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
-    // 1. Salvataggio locale immediato per sicurezza
+    // 1. Salvataggio immediato sul dispositivo
     localStorage.setItem('inventario_dati_' + p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
     
     try {
         let cloudData = {};
 
-        // 2. Scarichiamo i dati attuali dal foglio per non sovrascrivere le altre sedi
+        // 2. Leggiamo lo stato attuale del foglio Google
         const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
         if (resGet.ok) {
             const fetched = await resGet.json();
-            if (fetched && typeof fetched === 'object') {
-                cloudData = fetched;
-            }
+            if (fetched && typeof fetched === 'object') cloudData = fetched;
         }
 
-        // 3. Aggiorniamo la lista del punto vendita selezionato
+        // 3. Aggiorniamo solo i dati del punto vendita corrente
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // 4. Inviamo a Google Sheets con mode: 'no-cors' (impedisce al browser di bloccare l'invio)
+        // 4. Inviamo l'aggiornamento al cloud
         await syncCloud(cloudData);
         
         chiudiDialog(); 
-        alert("✅ Report salvato e condiviso con tutti i dispositivi!");
+        alert("✅ Report salvato e sincronizzato!");
     } catch (e) { 
         console.error("Errore salva:", e); 
         chiudiDialog();
@@ -380,17 +378,18 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            // Salvataggio universale: funziona al 100% su iPhone, iPad, Android e PC
-            const jsonString = JSON.stringify(data);
-            const encodedData = encodeURIComponent(jsonString);
-            const saveUrl = `${SCRIPT_URL}?action=save&data=${encodedData}&nocache=${new Date().getTime()}`;
-            
-            const res = await fetch(saveUrl, { redirect: 'follow' });
-            if (!res.ok) throw new Error("Errore di rete");
+            // Invio POST diretto senza limiti di caratteri
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(data)
+            });
 
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
+            // Lettura dati dal foglio Google
             const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
             if (res.ok) {
                 const cloudData = await res.json();

@@ -343,7 +343,9 @@ async function eseguiSalva(forza = false) {
     
     try {
         let cloudData = {};
-        const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`);
+        
+        // Lettura rapida dei dati esistenti
+        const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
         if (resGet.ok) { 
             const fetched = await resGet.json(); 
             if (fetched) cloudData = fetched; 
@@ -379,17 +381,18 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            const res = await fetch(SCRIPT_URL, {
+            // Invio rapido con gestione dei reindirizzamenti di Google
+            await fetch(SCRIPT_URL, {
                 method: 'POST',
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(data)
             });
-            if (!res.ok) throw new Error("Errore Google Sheets");
 
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`);
+            const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
             if (!res.ok) throw new Error("Errore Google Sheets");
             const cloudData = await res.json();
             if (cloudData) { 
@@ -407,6 +410,7 @@ async function syncCloud(data = null) {
         creaLista(); 
     }
 }
+
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }
 function azzeraLista() { if(confirm("Cancellare dati?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }

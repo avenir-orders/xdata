@@ -341,25 +341,27 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
-    // 1. SALVIAMO SUBITO IN LOCALE PER NON PERDERE MAI I DATI
+    // 1. Salvataggio locale immediato per sicurezza
     localStorage.setItem('inventario_dati_' + p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
     
     try {
         let cloudData = {};
 
-        // 2. SCARICIAMO I DATI REALMENTE PRESENTI SU GOOGLE PER NON SOVRASCRIVERE GLI ALTRI
+        // 2. Scarichiamo i dati attuali dal foglio per non sovrascrivere le altre sedi
         const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
         if (resGet.ok) {
             const fetched = await resGet.json();
-            if (fetched && typeof fetched === 'object') cloudData = fetched;
+            if (fetched && typeof fetched === 'object') {
+                cloudData = fetched;
+            }
         }
 
-        // 3. AGGIORNIAMO SOLO IL NOSTRO PUNTO VENDITA
+        // 3. Aggiorniamo la lista del punto vendita selezionato
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // 4. MANDIAMO TUTTO AL FOGLIO GOOGLE
+        // 4. Inviamo a Google Sheets con mode: 'no-cors' (impedisce al browser di bloccare l'invio)
         await syncCloud(cloudData);
         
         chiudiDialog(); 
@@ -378,10 +380,10 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            // Invio standard con redirect per avere la certezza della scrittura
+            // POST con mode: 'no-cors': scrittura diretta e garantita su Google Sheets
             await fetch(SCRIPT_URL, {
                 method: 'POST',
-                redirect: 'follow',
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(data)
             });
@@ -389,6 +391,7 @@ async function syncCloud(data = null) {
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
+            // GET con redirect: 'follow': lettura corretta dei dati dal cloud
             const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
             if (res.ok) {
                 const cloudData = await res.json();

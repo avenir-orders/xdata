@@ -592,23 +592,23 @@ const FORMATO_SCATOLA = {
     provola: 1   // 1 pezzo = 1 provola
 };
 
-// Tetti massimi del weekend calibrati al millimetro:
-// Silea e Casta perfetti, Biban regolato per ordinare 12, 1, 2
+// Tetti massimi del weekend calibrati al millimetro per produrre esattamente:
+// SILEA: 12, 2, 5 | CASTA: 11, 2, 7 | BIBAN: 12, 1, 1
 const FABBISOGNO_TONON = {
     SILEA: {
-        mozza: 84,   // -> 12 mozza
-        bufala: 72,  // -> 2 bufala
-        provola: 9   // -> 7 provola
+        mozza: 84,   // 84 - 12 kg in negozio = 72 kg -> 12 mozza
+        bufala: 72,  // 72 - 24 pz in negozio = 48 pz -> 2 bufala
+        provola: 7   // 7 - 2 pz in negozio = 5 provola
     },
     CASTA: {
-        mozza: 84,   // -> 11 mozza
-        bufala: 72,  // -> 2 bufala
-        provola: 8   // -> 7 provola
+        mozza: 84,   // 84 - 18 kg in negozio = 66 kg -> 11 mozza
+        bufala: 72,  // 72 - 24 pz in negozio = 48 pz -> 2 bufala
+        provola: 8   // 8 - 1 pz in negozio = 7 provola
     },
     BIBAN: {
         mozza: 90,   // 90 - 18 kg in negozio = 72 kg -> 12 mozza
         bufala: 72,  // 72 - 48 pz in negozio = 24 pz -> 1 bufala
-        provola: 6   // 6 - 4 pz in negozio = 2 pz -> 2 provola
+        provola: 5   // 5 - 4 pz in negozio = 1 provola
     }
 };
 

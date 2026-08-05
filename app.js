@@ -583,7 +583,7 @@ function inviaOrdineBarbazza() {
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
 }
 // ============================================================================
-// GESTIONE ORDINI FORNITORE: TONON (CON RICERCA INTELLIGENTE GIACENZE)
+// GESTIONE ORDINI FORNITORE: TONON (CON CONSUMI SEPARATI PER SEDE)
 // ============================================================================
 
 const FORMATO_SCATOLA = {
@@ -592,11 +592,25 @@ const FORMATO_SCATOLA = {
     provola: 1   // 1 pezzo = 1 provola
 };
 
-// Consumi medi giornalieri (Mozza in KG, Bufala in PEZZI, Provola in PEZZI)
+// Consumi medi giornalieri PERSONALIZZATI PER OGNI PUNTO VENDITA
+// (Mozza in KG, Bufala in PEZZI, Provola in PEZZI)
 const CONSUMI_TONON = {
-    mozza: { lun: 12, mar: 12, mer: 12, gio: 12, ven: 18, sab: 30, dom: 30 },
-    bufala: { lun: 14, mar: 14, mer: 14, gio: 14, ven: 14, sab: 24, dom: 24 },
-    provola: { lun: 1, mar: 1, mer: 1, gio: 1, ven: 1, sab: 2, dom: 2 }
+    SILEA: {
+        mozza:   { lun: 12, mar: 12, mer: 12, gio: 14, ven: 18, sab: 30, dom: 30 },
+        bufala:  { lun: 14, mar: 14, mer: 14, gio: 14, ven: 14, sab: 24, dom: 24 },
+        provola: { lun: 1,  mar: 1,  mer: 1,  gio: 1,  ven: 2,  sab: 2,  dom: 2 }
+    },
+    CASTA: {
+        mozza:   { lun: 12, mar: 12, mer: 12, gio: 12, ven: 18, sab: 28, dom: 28 },
+        bufala:  { lun: 14, mar: 14, mer: 14, gio: 14, ven: 16, sab: 28, dom: 28 },
+        // Fine settimana Casta: 2 (ven) + 3 (sab) + 3 (dom) = 8 provole totali!
+        provola: { lun: 1,  mar: 1,  mer: 1,  gio: 1,  ven: 2,  sab: 3,  dom: 3 }
+    },
+    BIBAN: {
+        mozza:   { lun: 12, mar: 12, mer: 12, gio: 12, ven: 18, sab: 30, dom: 30 },
+        bufala:  { lun: 10, mar: 10, mer: 10, gio: 10, ven: 10, sab: 16, dom: 16 },
+        provola: { lun: 1,  mar: 1,  mer: 1,  gio: 1,  ven: 1,  sab: 1,  dom: 1 }
+    }
 };
 
 const CONSEGNE_TONON = {
@@ -616,7 +630,6 @@ function cercaGiacenza(inventario, tipo) {
         let match = false;
 
         if (tipo === 'mozza') {
-            // Deve contenere "mozza" ma NON "bufala"
             match = keyLower.includes('mozza') && !keyLower.includes('bufala');
         } else if (tipo === 'bufala') {
             match = keyLower.includes('bufala');
@@ -625,7 +638,6 @@ function cercaGiacenza(inventario, tipo) {
         }
 
         if (match) {
-            // Estrae solo i numeri dal campo (es. da "12 kg" prende 12)
             const num = parseFloat(String(inventario[key]).replace(/[^0-9.]/g, ''));
             if (!isNaN(num)) return num;
         }
@@ -658,7 +670,6 @@ function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
     const rawData = localStorage.getItem('inventario_dati_' + sedeKey);
     const inventario = rawData ? JSON.parse(rawData) : {};
     
-    // Legge le giacenze reali in negozio in modo intelligente
     const giacenze = {
         mozza: cercaGiacenza(inventario, 'mozza'),
         bufala: cercaGiacenza(inventario, 'bufala'),
@@ -667,15 +678,12 @@ function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
 
     const ordineScatole = {};
     ['mozza', 'bufala', 'provola'].forEach(prodotto => {
-        // 1. Fabbisogno totale del periodo (in kg o pezzi)
+        // Legge i consumi specifici della singola sede (SILEA, CASTA o BIBAN)
         const fabbisognoTotale = finestra.giorniCopertura.reduce((somma, giorno) => {
-            return somma + (CONSUMI_TONON[prodotto][giorno] || 0);
+            return somma + (CONSUMI_TONON[sedeKey][prodotto][giorno] || 0);
         }, 0);
         
-        // 2. Sottrae la giacenza effettiva presente in negozio
         const fabbisognoNetto = Math.max(0, fabbisognoTotale - giacenze[prodotto]);
-        
-        // 3. Converte in scatole intere (arrotondando per eccesso per non restare mai senza merce)
         ordineScatole[prodotto] = Math.ceil(fabbisognoNetto / FORMATO_SCATOLA[prodotto]);
     });
 

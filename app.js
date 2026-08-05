@@ -128,11 +128,16 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         </select>
     `;
 
-   let h = selectFornitori;
+    let h = selectFornitori;
 
+    // === PULSANTI PER GLI ORDINI AI FORNITORI ===
     if (fornitoreSelezionato === "BARBAZZA") {
         h += `<button onclick="inviaOrdineBarbazza()" style="background:#25D366; color:white; width:100%; margin-bottom:10px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🟢 INVIA ORDINE BARBAZZA</button>`;
     }
+    if (fornitoreSelezionato === "TONON") {
+        h += `<button onclick="inviaOrdineTonon()" style="background:#2E7D32; color:white; width:100%; margin-bottom:10px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🟢 INVIA ORDINE TONON</button>`;
+    }
+    // ============================================
 
     if (fornitoreSelezionato === "TUTTI") {
         h += `<button onclick="scaricaScreenshot(this)" style="background:var(--primary); color:white; width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📸 SALVA COME IMMAGINE</button>`;
@@ -140,7 +145,6 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
 
     h += `<div id="area-da-fotografare" style="background:var(--bg-body); padding:15px; border-radius:10px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start;">`;
 
-   
     const colonneHTML = ["", "", ""];
     const ordineSacro = ["PASTA", "VASCHETTE", "FRESCO", "FORMAGGI", "SALUMI", "PESCE", "SCAFFALERIA", "IMPASTI", "IMBALLAGGI"];
     const chiaviSito = Object.keys(raggruppati);
@@ -159,8 +163,9 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     const chiaviBibite = chiaviSito.filter(k => k.trim().toUpperCase().includes("BIBITE"));
     ordineFinale.push(...chiaviBibite);
 
+    // Mappatura articoli aggiornata
     const fornitori = {
-        "TONON": ["mozzarella in kg", "provola", "provola aff.", "bufala (numero)"],
+        "TONON": ["mozzarella in kg", "mozza", "mozzarella", "provola", "provola aff.", "bufala (numero)", "bufala", "mozzarella di bufala"],
         "PIAN": ["porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
         "RONCADESE": ["salsiccia", "pancetta"],
         "BORTOLATO": ["burrata"],
@@ -220,7 +225,6 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     h += `</div>`;
     cont.innerHTML = h;
 }
-
 function scaricaScreenshot(btn) {
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Generazione in corso (attendi)...";

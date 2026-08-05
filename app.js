@@ -578,7 +578,130 @@ function inviaOrdineBarbazza() {
     // Apre WhatsApp
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
 }
+// ============================================================================
+// GESTIONE ORDINI FORNITORE: TONON (CONVERSIONE IN SCATOLE)
+// ============================================================================
 
+// 1. Formato di ogni singola scatola/collo
+const FORMATO_SCATOLA = {
+    mozza: 6,    // 1 scatola = 6 kg
+    bufala: 24,  // 1 scatola = 24 pezzi singoli
+    provola: 1   // 1 pezzo = 1 unità d'ordine
+};
+
+// 2. Consumi medi giornalieri (Mozza in KG, Bufala in PEZZI, Provola in PEZZI)
+const CONSUMI_TONON = {
+    mozza: {
+        lun: 12, mar: 12, mer: 12, gio: 12, // Media 10/12 kg al giorno
+        ven: 18,                            // Media 18/20 kg il venerdì
+        sab: 30, dom: 30                    // Media 26/30/36 kg sab e dom
+    },
+    bufala: {
+        lun: 14, mar: 14, mer: 14, gio: 14, ven: 14, // Media 12/16 pezzi al giorno
+        sab: 24, dom: 24                             // Media 24 pezzi sab e dom
+    },
+    provola: {
+        lun: 1, mar: 1, mer: 1, gio: 1, ven: 1,      // Media 1 al giorno
+        sab: 2, dom: 2                               // Media 2 sab e dom
+    }
+};
+
+// 3. Calendario consegne per sede (0 = Dom, 1 = Lun, 2 = Mar, 3 = Mer, 4 = Gio, 5 = Ven, 6 = Sab)
+const CONSEGNE_TONON = {
+    SILEA: [2, 4], // Martedì, Giovedì
+    CASTA: [1, 5], // Lunedì, Venerdì
+    BIBAN: [2, 5]  // Martedì, Venerdì
+};
+
+const NOMI_GIORNI_BREVI = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+
+/**
+ * Trova il prossimo giorno di consegna e la finestra di giorni da coprire
+ */
+function calcolaFinestraConsegnaTonon(sede, dataRiferimento = new Date()) {
+    const giornoAttuale = dataRiferimento.getDay();
+    const giorniConsegna = CONSEGNE_TONON[sede];
+    
+    let prossimoGiorno = giorniConsegna.find(g => g >= giornoAttuale);
+    if (prossimoGiorno === undefined) {
+        prossimoGiorno = giorniConsegna[0]; 
+    }
+    
+    const indiceProssimo = giorniConsegna.indexOf(prossimoGiorno);
+    const consegnaSuccessiva = giorniConsegna[(indiceProssimo + 1) % giorniConsegna.length];
+    
+    let giorniCopertura = [];
+    let g = prossimoGiorno;
+    while (true) {
+        const nomeGiorno = NOMI_GIORNI_BREVI[g];
+        giorniCopertura.push(nomeGiorno);
+        g = (g + 1) % 7;
+        if (g === consegnaSuccessiva) break;
+    }
+    
+    return {
+        giornoConsegnaBreve: NOMI_GIORNI_BREVI[prossimoGiorno],
+        giorniCopertura: giorniCopertura
+    };
+}
+
+/**
+ * Calcola l'ordine convertendo il fabbisogno netto in SCATOLE INTERE
+ */
+function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
+    const finestra = calcolaFinestraConsegnaTonon(sedeKey);
+    
+    // Legge l'ultimo inventario salvato in memoria
+    const rawData = localStorage.getItem('inventario_dati_' + sedeKey);
+    const inventario = rawData ? JSON.parse(rawData) : {};
+    
+    // Giacenze attuali in negozio (Mozza in kg, Bufala in pezzi, Provola in pezzi)
+    const giacenze = {
+        mozza: parseFloat(inventario['Mozzarella'] || inventario['Mozza'] || 0),
+        bufala: parseFloat(inventario['Bufala'] || inventario['Mozzarella di Bufala'] || 0),
+        provola: parseFloat(inventario['Provola'] || inventario['Provola Affumicata'] || 0)
+    };
+
+    const ordineScatole = {};
+    
+    ['mozza', 'bufala', 'provola'].forEach(prodotto => {
+        // 1. Somma il fabbisogno totale del periodo (in kg o pezzi)
+        const fabbisognoTotale = finestra.giorniCopertura.reduce((somma, giorno) => {
+            return somma + (CONSUMI_TONON[prodotto][giorno] || 0);
+        }, 0);
+        
+        // 2. Sottrai la giacenza presente in inventario
+        const fabbisognoNetto = Math.max(0, fabbisognoTotale - giacenze[prodotto]);
+        
+        // 3. Dividi per il formato scatola (6 o 24) e arrotonda per eccesso (Math.ceil) 
+        // per avere sempre scatole intere e non restare mai senza merce
+        ordineScatole[prodotto] = Math.ceil(fabbisognoNetto / FORMATO_SCATOLA[prodotto]);
+    });
+
+    // Output formattato identico allo screenshot WhatsApp
+    return `${nomeDisplay} ${finestra.giornoConsegnaBreve}\n` +
+           `  ${ordineScatole.mozza} mozza\n` +
+           `  ${ordineScatole.bufala} bufala\n` +
+           `  ${ordineScatole.provola} provola`;
+}
+
+/**
+ * Genera il messaggio e apre WhatsApp
+ */
+function inviaOrdineTonon() {
+    const bloccoSilea = calcolaOrdineSedeTonon('SILEA', 'Silea');
+    const bloccoCasta = calcolaOrdineSedeTonon('CASTA', 'Casta');
+    const bloccoBiban = calcolaOrdineSedeTonon('BIBAN', 'Biban');
+
+    const messaggioFinale = `${bloccoSilea}\n\n${bloccoCasta}\n\n${bloccoBiban}`;
+
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(messaggioFinale).catch(err => console.error("Errore copia appunti:", err));
+    }
+
+    const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(messaggioFinale)}`;
+    window.open(urlWhatsApp, '_blank');
+}
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
     document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;

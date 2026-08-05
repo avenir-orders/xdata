@@ -48,6 +48,7 @@
             <option value="BIBAN">BIBAN</option>
             <option value="TUTTE">Visualizza tutte</option>
             <option value="ARCHIVIO">Archivio storico</option>
+            <option value="FORNITORI">Ordini Fornitori</option>
         </select>
         
         <div id="search-box" style="margin-top: 15px; display: none;">
@@ -56,6 +57,18 @@
         <div id="date-picker-container" style="display: none; margin-top:15px;">
             <input type="date" id="archiveDate" class="date-input" onchange="generaVistaArchivio()">
         </div>
+
+        <!-- === BOX SELEZIONE FORNITORE === -->
+        <div id="fornitori-box" style="display: none; margin-top: 15px;">
+            <label style="font-weight: bold; color: var(--primary); text-transform: uppercase; display: block; margin-bottom: 5px;">SELEZIONA FORNITORE</label>
+            <select id="select-fornitore" class="pizzeria-select" onchange="cambiaFornitore()">
+                <option value="" selected disabled>Scegli fornitore...</option>
+                <option value="BARBAZZA">BARBAZZA</option>
+                <option value="TONON">TONON</option>
+            </select>
+        </div>
+        <!-- =============================== -->
+
         <button id="btn-azzera" class="btn-reset" onclick="azzeraLista()" style="display:none;">AZZERA LISTA ATTUALE</button>
     </div>
 
@@ -64,10 +77,15 @@
     <div class="footer-controls" id="footer-btns" style="display:none;">
         <button class="btn-save" id="save-btn" onclick="controllaESalva()">SALVA</button>
         <button class="btn-wa" onclick="inviaWhatsApp()">INVIA REPORT</button>
+
+        <!-- === PULSANTI ORDINI FORNITORI === -->
+        <button id="btn-ordine-barbazza" class="btn-wa" style="display:none; background:#2E7D32; margin-top:10px;" onclick="inviaOrdineBarbazza()">📦 INVIA ORDINE BARBAZZA</button>
+        <button id="btn-ordine-tonon" class="btn-wa" style="display:none; background:#2E7D32; margin-top:10px;" onclick="inviaOrdineTonon()">📦 INVIA ORDINE TONON</button>
+        <!-- ================================= -->
     </div>
 
     <!-- Caricamento dei file JavaScript (prima i dati, poi la logica) -->
-   <script src="data.js?v=1"></script>
-<script src="app.js?v=1"></script>
+    <script src="data.js?v=1"></script>
+    <script src="app.js?v=1"></script>
 </body>
 </html>

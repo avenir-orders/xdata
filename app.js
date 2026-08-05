@@ -356,28 +356,26 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
+    // 1. Salvataggio istantaneo nella memoria del dispositivo
     localStorage.setItem('inventario_dati_' + p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
     
+    // 2. Prepariamo SOLO il pacchetto della nostra sede (senza perdere tempo a scaricare il resto!)
+    const payload = {
+        ['inventario_dati_' + p]: newDataString,
+        [`inventario_dati_${p}_${oggiStr}`]: newDataString
+    };
+    
     try {
-        let cloudData = {};
-        const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
-        if (resGet.ok) {
-            const fetched = await resGet.json();
-            if (fetched && typeof fetched === 'object') cloudData = fetched;
-        }
-
-        cloudData['inventario_dati_' + p] = newDataString;
-        cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
-
-        await syncCloud(cloudData);
+        // 3. Invio diretto e immediato a Google Sheets
+        await syncCloud(payload);
         
-        modificheNonSalvate = false; // <-- RESET: Modifiche salvate con successo
+        modificheNonSalvate = false; // Reset protezione scrittura
         chiudiDialog(); 
         alert("✅ Report salvato e sincronizzato!");
     } catch (e) { 
         console.error("Errore salva:", e); 
-        modificheNonSalvate = false; // <-- RESET
+        modificheNonSalvate = false; // Reset protezione scrittura
         chiudiDialog();
         alert("✅ Salvato sul dispositivo!");
     }

@@ -583,7 +583,7 @@ function inviaOrdineBarbazza() {
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
 }
 // ============================================================================
-// GESTIONE ORDINI FORNITORE: TONON (CON CONSUMI SEPARATI PER SEDE)
+// GESTIONE ORDINI FORNITORE: TONON (CALIBRATO SU FABBISOGNI REALI WEEKEND)
 // ============================================================================
 
 const FORMATO_SCATOLA = {
@@ -592,24 +592,23 @@ const FORMATO_SCATOLA = {
     provola: 1   // 1 pezzo = 1 provola
 };
 
-// Consumi medi giornalieri PERSONALIZZATI PER OGNI PUNTO VENDITA
-// (Mozza in KG, Bufala in PEZZI, Provola in PEZZI)
-const CONSUMI_TONON = {
+// Fabbisogni netti calibrati al millimetro per il fine settimana (Ven -> Dom)
+// Se c'è giacenza in negozio, l'app la sottrae automaticamente da questi valori!
+const FABBISOGNO_TONON = {
     SILEA: {
-        mozza:   { lun: 12, mar: 12, mer: 12, gio: 14, ven: 18, sab: 30, dom: 30 },
-        bufala:  { lun: 14, mar: 14, mer: 14, gio: 14, ven: 14, sab: 24, dom: 24 },
-        provola: { lun: 1,  mar: 1,  mer: 1,  gio: 1,  ven: 2,  sab: 2,  dom: 2 }
+        mozza: 72,   // 72 kg / 6 = 12 mozza
+        bufala: 48,  // 48 pz / 24 = 2 bufala
+        provola: 7   // 7 provole
     },
     CASTA: {
-        mozza:   { lun: 12, mar: 12, mer: 12, gio: 12, ven: 18, sab: 28, dom: 28 },
-        bufala:  { lun: 14, mar: 14, mer: 14, gio: 14, ven: 16, sab: 28, dom: 28 },
-        // Fine settimana Casta: 2 (ven) + 3 (sab) + 3 (dom) = 8 provole totali!
-        provola: { lun: 1,  mar: 1,  mer: 1,  gio: 1,  ven: 2,  sab: 3,  dom: 3 }
+        mozza: 66,   // 66 kg / 6 = 11 mozza
+        bufala: 48,  // 48 pz / 24 = 2 bufala
+        provola: 8   // 8 pz - 1 avanzata = 7 provole
     },
     BIBAN: {
-        mozza:   { lun: 12, mar: 12, mer: 12, gio: 12, ven: 18, sab: 30, dom: 30 },
-        bufala:  { lun: 10, mar: 10, mer: 10, gio: 10, ven: 10, sab: 16, dom: 16 },
-        provola: { lun: 1,  mar: 1,  mer: 1,  gio: 1,  ven: 1,  sab: 1,  dom: 1 }
+        mozza: 72,   // 72 kg / 6 = 12 mozza
+        bufala: 24,  // 24 pz / 24 = 1 bufala
+        provola: 2   // 2 provole
     }
 };
 
@@ -622,7 +621,7 @@ const CONSEGNE_TONON = {
 const NOMI_GIORNI_BREVI = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
 
 /**
- * Ricerca intelligente nell'inventario: ignora maiuscole/minuscole e caratteri speciali
+ * Ricerca intelligente nell'inventario: ignora maiuscole/minuscole e testi extra
  */
 function cercaGiacenza(inventario, tipo) {
     for (const key in inventario) {
@@ -652,17 +651,7 @@ function calcolaFinestraConsegnaTonon(sede, dataRiferimento = new Date()) {
     let prossimoGiorno = giorniConsegna.find(g => g >= giornoAttuale);
     if (prossimoGiorno === undefined) prossimoGiorno = giorniConsegna[0]; 
     
-    const indiceProssimo = giorniConsegna.indexOf(prossimoGiorno);
-    const consegnaSuccessiva = giorniConsegna[(indiceProssimo + 1) % giorniConsegna.length];
-    
-    let giorniCopertura = [];
-    let g = prossimoGiorno;
-    while (true) {
-        giorniCopertura.push(NOMI_GIORNI_BREVI[g]);
-        g = (g + 1) % 7;
-        if (g === consegnaSuccessiva) break;
-    }
-    return { giornoConsegnaBreve: NOMI_GIORNI_BREVI[prossimoGiorno], giorniCopertura };
+    return { giornoConsegnaBreve: NOMI_GIORNI_BREVI[prossimoGiorno] };
 }
 
 function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
@@ -670,6 +659,7 @@ function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
     const rawData = localStorage.getItem('inventario_dati_' + sedeKey);
     const inventario = rawData ? JSON.parse(rawData) : {};
     
+    // Legge le rimanenze reali presenti nel negozio
     const giacenze = {
         mozza: cercaGiacenza(inventario, 'mozza'),
         bufala: cercaGiacenza(inventario, 'bufala'),
@@ -678,13 +668,13 @@ function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
 
     const ordineScatole = {};
     ['mozza', 'bufala', 'provola'].forEach(prodotto => {
-        // Legge i consumi specifici della singola sede (SILEA, CASTA o BIBAN)
-        const fabbisognoTotale = finestra.giorniCopertura.reduce((somma, giorno) => {
-            return somma + (CONSUMI_TONON[sedeKey][prodotto][giorno] || 0);
-        }, 0);
+        const target = FABBISOGNO_TONON[sedeKey][prodotto] || 0;
         
-        const fabbisognoNetto = Math.max(0, fabbisognoTotale - giacenze[prodotto]);
-        ordineScatole[prodotto] = Math.ceil(fabbisognoNetto / FORMATO_SCATOLA[prodotto]);
+        // Calcola quanto manca per raggiungere il pieno del weekend
+        const daOrdinareNetto = Math.max(0, target - giacenze[prodotto]);
+        
+        // Converte in scatole intere
+        ordineScatole[prodotto] = Math.ceil(daOrdinareNetto / FORMATO_SCATOLA[prodotto]);
     });
 
     return `${nomeDisplay} ${finestra.giornoConsegnaBreve}\n` +

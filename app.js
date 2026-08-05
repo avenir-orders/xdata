@@ -328,6 +328,21 @@ function chiudiDialog() { document.getElementById('overlay').style.display = 'no
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKYWNbfIyXW_lRfaT-LRA9l6LSfdnwhoQI80cTuZJBlrGuKKnQdIpWjbae_r_s6yNWFA/exec";
 
+// === SCUDO PROTEGGI-SCRITTURA ===
+// Rileva se qualcuno sta scrivendo per impedire che il timer cancelli i numeri
+let modificheNonSalvate = false;
+document.addEventListener('input', (e) => {
+    if (e.target && e.target.tagName === 'INPUT') {
+        modificheNonSalvate = true;
+    }
+});
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'pizzeria') {
+        modificheNonSalvate = false;
+    }
+});
+// ================================
+
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
     const d = {};
@@ -341,31 +356,28 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
-    // 1. Salvataggio immediato sul dispositivo
     localStorage.setItem('inventario_dati_' + p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
     
     try {
         let cloudData = {};
-
-        // 2. Leggiamo lo stato attuale del foglio Google
         const resGet = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
         if (resGet.ok) {
             const fetched = await resGet.json();
             if (fetched && typeof fetched === 'object') cloudData = fetched;
         }
 
-        // 3. Aggiorniamo solo i dati del punto vendita corrente
         cloudData['inventario_dati_' + p] = newDataString;
         cloudData[`inventario_dati_${p}_${oggiStr}`] = newDataString;
 
-        // 4. Inviamo l'aggiornamento al cloud
         await syncCloud(cloudData);
         
+        modificheNonSalvate = false; // <-- RESET: Modifiche salvate con successo
         chiudiDialog(); 
         alert("✅ Report salvato e sincronizzato!");
     } catch (e) { 
         console.error("Errore salva:", e); 
+        modificheNonSalvate = false; // <-- RESET
         chiudiDialog();
         alert("✅ Salvato sul dispositivo!");
     }
@@ -378,7 +390,6 @@ async function syncCloud(data = null) {
     status.style.color = "#666666"; 
     try {
         if (data) {
-            // Invio POST diretto senza limiti di caratteri
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -389,7 +400,6 @@ async function syncCloud(data = null) {
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            // Lettura dati dal foglio Google
             const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
             if (res.ok) {
                 const cloudData = await res.json();
@@ -407,8 +417,12 @@ async function syncCloud(data = null) {
         status.innerText = '✅ Salvato in locale'; 
         status.style.color = "#25D366"; 
     } finally {
+        // SE L'UTENTE STA SCRIVENDO O HA MODIFICHE NON SALVATE, NON RICARICARE LA SCHERMATA!
         if (typeof creaLista === 'function') {
-            creaLista();
+            const casellaAttiva = document.activeElement && document.activeElement.tagName === 'INPUT';
+            if (!modificheNonSalvate && !casellaAttiva) {
+                creaLista();
+            }
         }
     }
 }

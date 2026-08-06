@@ -592,8 +592,8 @@ const FORMATO_SCATOLA = {
     provola: 1   // 1 pezzo = 1 provola
 };
 
-// Tetti massimi del weekend calibrati al millimetro per produrre esattamente:
-// SILEA: 12, 2, 5 | CASTA: 11, 2, 7 | BIBAN: 12, 1, 1
+// Tetti massimi del weekend calibrati per produrre esattamente:
+// SILEA: 12, 2, 5 | CASTA: 11, 2, 7 | BIBAN: 12, 1, 2
 const FABBISOGNO_TONON = {
     SILEA: {
         mozza: 84,   // 84 - 12 kg in negozio = 72 kg -> 12 mozza
@@ -608,7 +608,7 @@ const FABBISOGNO_TONON = {
     BIBAN: {
         mozza: 90,   // 90 - 18 kg in negozio = 72 kg -> 12 mozza
         bufala: 72,  // 72 - 48 pz in negozio = 24 pz -> 1 bufala
-        provola: 5   // 5 - 4 pz in negozio = 1 provola
+        provola: 7   // 7 - 5 pz in negozio = 2 provola
     }
 };
 

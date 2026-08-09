@@ -332,9 +332,9 @@ function chiudiDialog() { document.getElementById('overlay').style.display = 'no
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKYWNbfIyXW_lRfaT-LRA9l6LSfdnwhoQI80cTuZJBlrGuKKnQdIpWjbae_r_s6yNWFA/exec";
 
-// === SCUDO PROTEGGI-SCRITTURA ===
-// Rileva se qualcuno sta scrivendo per impedire che il timer cancelli i numeri
 let modificheNonSalvate = false;
+let ultimoSalvataggio = 0; // === SCUDO TEMPORALE ===
+
 document.addEventListener('input', (e) => {
     if (e.target && e.target.tagName === 'INPUT') {
         modificheNonSalvate = true;
@@ -345,7 +345,6 @@ document.addEventListener('change', (e) => {
         modificheNonSalvate = false;
     }
 });
-// ================================
 
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
@@ -360,28 +359,29 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
-    // 1. Salvataggio istantaneo nella memoria del dispositivo
+    // 1. Salvataggio immediato in memoria per sicurezza estrema
     localStorage.setItem('inventario_dati_' + p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
     
-    // 2. Prepariamo SOLO il pacchetto della nostra sede (senza perdere tempo a scaricare il resto!)
+    // Attiva lo scudo temporale: segna l'istante esatto di questo salvataggio
+    ultimoSalvataggio = Date.now(); 
+    
     const payload = {
         ['inventario_dati_' + p]: newDataString,
         [`inventario_dati_${p}_${oggiStr}`]: newDataString
     };
     
     try {
-        // 3. Invio diretto e immediato a Google Sheets
         await syncCloud(payload);
-        
-        modificheNonSalvate = false; // Reset protezione scrittura
+        modificheNonSalvate = false; 
         chiudiDialog(); 
-        alert("✅ Report salvato e sincronizzato!");
+        alert("✅ Report salvato!");
     } catch (e) { 
         console.error("Errore salva:", e); 
-        modificheNonSalvate = false; // Reset protezione scrittura
+        modificheNonSalvate = false; 
+        document.getElementById('sync-status').innerText = '✅ Salvato in locale';
         chiudiDialog();
-        alert("✅ Salvato sul dispositivo!");
+        alert("⚠️ Rete o Server Google lenti: Dati salvati in sicurezza sul dispositivo!");
     }
 }
 
@@ -390,19 +390,36 @@ async function syncCloud(data = null) {
     if (!status) return;
     
     status.style.color = "#666666"; 
+    
+    // === ANTI-BLOCCO: Chiude la connessione se Google si incanta per più di 8 secondi ===
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     try {
         if (data) {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(data),
+                signal: controller.signal // Collega il timer alla chiamata
             });
-
+            clearTimeout(timeoutId);
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { redirect: 'follow' });
+            // === SCUDO ATTIVO: Se ho salvato da meno di 3 minuti (180.000 millisecondi), blocco il download dal cloud ===
+            if (Date.now() - ultimoSalvataggio < 180000) {
+                console.log("Download protetto: dati locali più freschi, blocco la sovrascrittura di Google.");
+                return; 
+            }
+
+            const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { 
+                redirect: 'follow',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
             if (res.ok) {
                 const cloudData = await res.json();
                 if (cloudData && typeof cloudData === 'object') { 
@@ -415,12 +432,12 @@ async function syncCloud(data = null) {
             }
         }
     } catch (e) { 
+        clearTimeout(timeoutId);
         console.error("Errore Sync:", e);
-        status.innerText = '✅ Salvato in locale'; 
-        status.style.color = "#25D366"; 
+        status.innerText = '✅ Modalità Offline'; 
+        status.style.color = "#e67e22"; 
     } finally {
-        // SE L'UTENTE STA SCRIVENDO O HA MODIFICHE NON SALVATE, NON RICARICARE LA SCHERMATA!
-        if (typeof creaLista === 'function') {
+        if (typeof creaLista === 'function' && !data) {
             const casellaAttiva = document.activeElement && document.activeElement.tagName === 'INPUT';
             if (!modificheNonSalvate && !casellaAttiva) {
                 creaLista();

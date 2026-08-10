@@ -436,15 +436,19 @@ async function syncCloud(data = null) {
         console.error("Errore Sync:", e);
         status.innerText = '✅ Modalità Offline'; 
         status.style.color = "#e67e22"; 
-    } finally {
+  } finally {
         if (typeof creaLista === 'function' && !data) {
             const casellaAttiva = document.activeElement && document.activeElement.tagName === 'INPUT';
-            if (!modificheNonSalvate && !casellaAttiva) {
+            const menuAttivo = document.getElementById('pizzeria') ? document.getElementById('pizzeria').value : '';
+            
+            // Se non ci sono modifiche in sospeso E l'utente non sta guardando le viste speciali (Tutte/Archivio/Fornitori) -> aggiorna la grafica
+            if (!modificheNonSalvate && !casellaAttiva && menuAttivo !== 'TUTTE' && menuAttivo !== 'ARCHIVIO' && menuAttivo !== 'FORNITORI') {
                 creaLista();
             }
         }
     }
-}
+
+    
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }
 function azzeraLista() { if(confirm("Cancellare dati?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }

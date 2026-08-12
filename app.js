@@ -712,26 +712,38 @@ function inviaOrdineTonon() {
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
     document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;
-    await syncCloud();
     
-    // Timer in background: ogni 2 minuti (120.000 ms) scarica i dati in modo invisibile.
-    // Grazie alle tue protezioni, aggiornerà lo schermo SOLO se nessuno sta scrivendo!
-    setInterval(async () => {
-        await syncCloud();
-    }, 120000); 
+    // Al primo avvio carica i dati normalmente
+    await syncCloud(); 
 };
 
-// 1. Sveglia standard (quando cambi app e torni indietro)
-document.addEventListener("visibilitychange", async function() {
-    if (document.visibilityState === "visible") await syncCloud();
+// GESTIONE USCITA E RIENTRO DALL'APP
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "hidden") {
+        modificheNonSalvate = false; 
+        if (document.activeElement) document.activeElement.blur(); 
+    } else if (document.visibilityState === "visible") {
+        
+        // Avviso visivo che l'app sta aspettando di ricollegarsi alla rete
+        const status = document.getElementById('sync-status');
+        if(status) {
+            status.innerText = '⏳ Riconnessione in corso...';
+            status.style.color = "#e67e22";
+        }
+        
+        // Diamo 2.5 secondi di orologio all'antenna del telefono per ricollegarsi 
+        setTimeout(async () => {
+            await syncCloud();
+        }, 2500);
+    }
 });
 
-// 2. Sveglia al tocco (quando tocchi lo schermo dopo che era in standby)
-window.addEventListener("focus", async function() {
-    await syncCloud();
-});
-
-// 3. Sveglia anti-ibernazione (quando il telefono scongela l'app dalla memoria RAM)
-window.addEventListener("pageshow", async function(e) {
-    if (e.persisted) await syncCloud();
+// GESTIONE "SCONGELAMENTO" MEMORIA
+window.addEventListener("pageshow", function(e) {
+    if (e.persisted) {
+        modificheNonSalvate = false;
+        setTimeout(async () => {
+            await syncCloud();
+        }, 2500);
+    }
 });

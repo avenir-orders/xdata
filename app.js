@@ -393,7 +393,7 @@ async function syncCloud(data = null) {
     
     // === ANTI-BLOCCO: Chiude la connessione se Google si incanta per più di 8 secondi ===
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
         if (data) {

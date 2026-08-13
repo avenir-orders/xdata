@@ -431,11 +431,16 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
                 }
             }
         }
-    } catch (e) { 
+  } catch (e) { 
         clearTimeout(timeoutId);
         console.error("Errore Sync:", e);
-        status.innerText = '✅ Modalità Offline'; 
-        status.style.color = "#e67e22"; 
+        
+        const status = document.getElementById('sync-status');
+        if(status) {
+            // Inserisce il titolo arancione e le istruzioni in piccolo subito sotto
+            status.innerHTML = 'MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Puoi compilare e salvare normalmente: i dati resteranno al sicuro sul dispositivo. Quando torna la rete, premi di nuovo SALVA per inviarli al Cloud)</span>'; 
+            status.style.color = "#e67e22"; 
+        }
   } finally {
         if (typeof creaLista === 'function' && !data) {
             const casellaAttiva = document.activeElement && document.activeElement.tagName === 'INPUT';

@@ -391,10 +391,10 @@ async function syncCloud(data = null) {
     
     status.style.color = "#666666"; 
     
-    // === ANTI-BLOCCO: Chiude la connessione se Google si incanta per più di 8 secondi ===
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
+   
+  // === ANTI-BLOCCO: Chiude la connessione solo se Google si incanta per più di 30 secondi ===
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 30000);
     try {
         if (data) {
             await fetch(SCRIPT_URL, {

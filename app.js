@@ -728,18 +728,8 @@ document.addEventListener("visibilitychange", function() {
         modificheNonSalvate = false; 
         if (document.activeElement) document.activeElement.blur(); 
     } else if (document.visibilityState === "visible") {
-        
-        // Avviso visivo che l'app sta aspettando di ricollegarsi alla rete
-        const status = document.getElementById('sync-status');
-        if(status) {
-            status.innerText = '⏳ Riconnessione in corso...';
-            status.style.color = "#e67e22";
-        }
-        
-        // Diamo 2.5 secondi di orologio all'antenna del telefono per ricollegarsi 
-        setTimeout(async () => {
-            await syncCloud();
-        }, 2500);
+        // Diamo 4 secondi pieni al telefono per riattivare l'antenna internet
+        setTimeout(syncSicuro, 4000);
     }
 });
 
@@ -747,8 +737,7 @@ document.addEventListener("visibilitychange", function() {
 window.addEventListener("pageshow", function(e) {
     if (e.persisted) {
         modificheNonSalvate = false;
-        setTimeout(async () => {
-            await syncCloud();
-        }, 2500);
+        // Diamo 4 secondi pieni anche in caso di scongelamento memoria
+        setTimeout(syncSicuro, 4000);
     }
 });

@@ -879,14 +879,9 @@ function inviaOrdineMetro() {
         return;
     }
 
-    // INSERISCI QUI IL NUMERO DI TELEFONO DELLA METRO (senza + o spazi)
-    let numeroTelefono = "390000000000"; 
-
-    // Crea il link per WhatsApp e lo apre
-    let urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(testoOrdine)}`;
-    window.open(urlWhatsApp, '_blank');
+  // Apre WhatsApp e ti fa scegliere il contatto a cui inviarlo
+    window.location.href = "whatsapp://send?text=" + encodeURIComponent(testoOrdine);
 }
-
 // Se l'utente è nella vista singola e preme il tasto in index.html, usa questa stessa funzione
 const btnMetroFisico = document.getElementById('btn-invia-metro');
 if (btnMetroFisico) {

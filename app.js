@@ -389,14 +389,23 @@ async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');
     if (!status) return;
     
+    // === CONTROLLO ISTANTANEO DELLA RETE (IL RADAR) ===
+    // Se il dispositivo capisce di non avere linea, va offline in un millesimo di secondo
+    if (!navigator.onLine) {
+        status.innerHTML = '✅ MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Puoi compilare e salvare normalmente: i dati resteranno al sicuro sul dispositivo. Quando torna la rete, premi di nuovo SALVA per inviarli al Cloud)</span>'; 
+        status.style.color = "#e67e22";
+        return; // Blocca la funzione qui, senza far partire nessun timer!
+    }
+    
     status.style.color = "#666666"; 
     
-   
-  // === ANTI-BLOCCO: Chiude la connessione solo se Google si incanta per più di 30 secondi ===
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 30000);
+    // === ANTI-BLOCCO: Abbassato a 20 secondi per non farti aspettare un'eternità ===
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); 
+
     try {
         if (data) {
+
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',

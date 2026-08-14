@@ -417,9 +417,11 @@ async function syncCloud(data = null) {
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-            // === SCUDO ATTIVO: Se ho salvato da meno di 3 minuti (180.000 millisecondi), blocco il download dal cloud ===
+           // === SCUDO ATTIVO: Se ho salvato da meno di 3 minuti, blocco il download ===
             if (Date.now() - ultimoSalvataggio < 180000) {
-                console.log("Download protetto: dati locali più freschi, blocco la sovrascrittura di Google.");
+                clearTimeout(timeoutId); // Spegne il timer per non farlo andare in errore
+                status.innerText = '✅ Pronta (Dati locali)'; 
+                status.style.color = "#25D366";
                 return; 
             }
 

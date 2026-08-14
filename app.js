@@ -159,7 +159,10 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
         h += `<button onclick="inviaOrdineTonon()" style="background:#2E7D32; color:white; width:100%; margin-bottom:10px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🟢 INVIA ORDINE TONON</button>`;
     }
     // ============================================
-
+// --- AGGIUNGI QUESTO NUOVO BLOCCO PER LA METRO ---
+    if (fornitoreSelezionato === "METRO") {
+        h += `<button onclick="inviaOrdineMetro()" style="background:#2e7d32; color:white; width:100%; margin-bottom:10px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🟢 INVIA ORDINE METRO</button>`;
+    }
     if (fornitoreSelezionato === "TUTTI") {
         h += `<button onclick="scaricaScreenshot(this)" style="background:var(--primary); color:white; width:100%; margin-bottom:15px; padding:12px; border-radius:10px; font-weight:bold; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📸 SALVA COME IMMAGINE</button>`;
     }
@@ -860,7 +863,7 @@ function generaOrdineMetro(dati) {
     return testoOrdine.trim();
 }
 
-document.getElementById('btn-invia-metro').addEventListener('click', function() {
+function inviaOrdineMetro() {
     // Legge i dati REALI salvati nella memoria del dispositivo per le 3 sedi
     let tuttiIDati = {
         'BIBAN': JSON.parse(localStorage.getItem('inventario_dati_BIBAN')) || {},
@@ -882,8 +885,13 @@ document.getElementById('btn-invia-metro').addEventListener('click', function() 
     // Crea il link per WhatsApp e lo apre
     let urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(testoOrdine)}`;
     window.open(urlWhatsApp, '_blank');
-});
+}
 
+// Se l'utente è nella vista singola e preme il tasto in index.html, usa questa stessa funzione
+const btnMetroFisico = document.getElementById('btn-invia-metro');
+if (btnMetroFisico) {
+    btnMetroFisico.addEventListener('click', inviaOrdineMetro);
+}
 
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];

@@ -727,17 +727,18 @@ function inviaOrdineTonon() {
 }
 
 function generaOrdineMetro(dati) {
-    // 'dati' contiene le rimanenze di tutti i locali. 
-    // Assicurati che i nomi tra apici (es: 'ricotta', 'nolatt') corrispondano esattamente agli ID che usi nella tua app.
-    
     let testoOrdine = "";
     const sedi = ['Biban', 'Casta', 'Silea'];
+    
+    // Preparo la lettura del magazzino di Casta per la regola speciale delle patate
+    const listaCasta = dati['CASTA'] || {};
+    const getValCasta = (nome) => parseFloat(listaCasta[nome]) || 0;
     
     sedi.forEach(sede => {
         let sedeKey = sede.toUpperCase(); // Es: 'BIBAN'
         let lista = dati[sedeKey] || {};
         
-        // Funzione per leggere i numeri in modo sicuro (se è vuoto, vale 0)
+        // Funzione per leggere i numeri del locale attuale in modo sicuro
         const getVal = (nome) => parseFloat(lista[nome]) || 0;
         
         let ordineSede = [];
@@ -746,7 +747,7 @@ function generaOrdineMetro(dati) {
         let qRicotta = Math.ceil(10 - getVal('ricotta'));
         if (qRicotta > 0) ordineSede.push(`${qRicotta} Ricotta`);
         
-        // 2. No Lattosio (Arrivano in buste da 3. Soglia matematica totale: 15)
+        // 2. No Lattosio (Soglia totale 15, buste da 3)
         let qNoLatt = Math.ceil((15 - getVal('nolatt')) / 3);
         if (qNoLatt > 0) ordineSede.push(`${qNoLatt} NoLatt`);
         
@@ -773,30 +774,65 @@ function generaOrdineMetro(dati) {
         // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
         if (getVal('mortadella') < 1) ordineSede.push(`1 Mortadella`);
         
-        // 7. Crudo (Soglia 1.5. Arrotondato per eccesso, quindi se 0.5 ordina 1)
-        let valCrudo = getVal('crudo');
-        let qCrudo = Math.ceil(1.5 - valCrudo);
+        // 7. Crudo (Soglia 1.5. Arrotondato per eccesso)
+        let qCrudo = Math.ceil(1.5 - getVal('crudo'));
         if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo`);
         
-        // 8. Datterino Rosso (Soglie diverse per locale)
+        // 8. Datterino Rosso (Soglie: Casta 5, Silea 2, Biban 4)
         let sogliaDattRosso = (sede === 'Casta') ? 5 : (sede === 'Silea' ? 2 : 4);
         let qDattRosso = Math.ceil(sogliaDattRosso - getVal('dattrosso'));
         if (qDattRosso > 0) ordineSede.push(`${qDattRosso} Datt. rosso`);
         
-        // 9. Datterino Giallo (1 cassa = 6 vaschette. Se in lista < 6, ordina 1 cassa intera)
+        // 9. Datterino Giallo (Soglia 6 vaschette, che formano 1 cassa)
         if (getVal('dattgiallo') < 6) ordineSede.push(`1 Datt. Giallo o Arancione`);
         
         // 10. Sale fino (Soglia totale 3)
         let qSale = Math.ceil(3 - getVal('sale'));
         if (qSale > 0) ordineSede.push(`${qSale} sale fino (10kg)`);
         
-        // Se c'è almeno un articolo da ordinare, costruisce il testo per questo locale
+        // 11. Noci (Soglia totale 3 per tutti)
+        let qNoci = Math.ceil(3 - getVal('noci'));
+        if (qNoci > 0) ordineSede.push(`${qNoci} Noci`);
+
+        // 12. Pellicola (Soglia: Casta/Biban 6, Silea 2)
+        let sogliaPellicola = (sede === 'Silea') ? 2 : 6;
+        let qPellicola = Math.ceil(sogliaPellicola - getVal('pellicola'));
+        if (qPellicola > 0) ordineSede.push(`${qPellicola} Pellicola`);
+
+        // 13. Patate (FREEZER) - Regola speciale: si ordina SOLO a Biban leggendo i dati di Casta
+        if (sede === 'Biban') {
+            // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5.
+            let qPatateFritte = Math.ceil((25 - getValCasta('patatefritte')) / 5);
+            if (qPatateFritte > 0) ordineSede.push(`${qPatateFritte} scatole Patate fritte`);
+            
+            // Patate al forno: soglia 25 sacchetti. Arrivano in scatole da 5.
+            let qPatateForno = Math.ceil((25 - getValCasta('patateforno')) / 5);
+            if (qPatateForno > 0) ordineSede.push(`${qPatateForno} scatole Patate al forno`);
+        }
+
+        // 14. Coca Cola N. (Soglia 48 bottiglie, ordinate in casse da 24)
+        let qCoca = Math.ceil((48 - getVal('cocacola')) / 24);
+        if (qCoca > 0) ordineSede.push(`${qCoca} casse Coca Cola N.`);
+
+        // 15. Coca Cola zero N. (Soglia 48 bottiglie, ordinate in casse da 24)
+        let qCocaZero = Math.ceil((48 - getVal('cocacolazero')) / 24);
+        if (qCocaZero > 0) ordineSede.push(`${qCocaZero} casse Coca Cola zero N.`);
+
+        // 16. Ichnusa non filtrata N. (Soglia 30 bottiglie, ordinate in scatole da 15)
+        let qIchnusa = Math.ceil((30 - getVal('ichnusa')) / 15);
+        if (qIchnusa > 0) ordineSede.push(`${qIchnusa} scatole Ichnusa non filtrata N.`);
+
+        // 17. Pedavena N. (Soglia 30 bottiglie, ordinate in scatole da 15)
+        let qPedavena = Math.ceil((30 - getVal('pedavena')) / 15);
+        if (qPedavena > 0) ordineSede.push(`${qPedavena} scatole Pedavena N.`);
+        
+        // Costruzione finale del testo per la sede attuale
         if (ordineSede.length > 0) {
             testoOrdine += `${sede}\n`;
             ordineSede.forEach(item => {
                 testoOrdine += `  ${item}\n`;
             });
-            testoOrdine += `\n`; // Spazio tra un locale e l'altro
+            testoOrdine += `\n`; 
         }
     });
     

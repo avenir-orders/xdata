@@ -725,6 +725,84 @@ function inviaOrdineTonon() {
     const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(messaggioFinale)}`;
     window.open(urlWhatsApp, '_blank');
 }
+
+function generaOrdineMetro(dati) {
+    // 'dati' contiene le rimanenze di tutti i locali. 
+    // Assicurati che i nomi tra apici (es: 'ricotta', 'nolatt') corrispondano esattamente agli ID che usi nella tua app.
+    
+    let testoOrdine = "";
+    const sedi = ['Biban', 'Casta', 'Silea'];
+    
+    sedi.forEach(sede => {
+        let sedeKey = sede.toUpperCase(); // Es: 'BIBAN'
+        let lista = dati[sedeKey] || {};
+        
+        // Funzione per leggere i numeri in modo sicuro (se è vuoto, vale 0)
+        const getVal = (nome) => parseFloat(lista[nome]) || 0;
+        
+        let ordineSede = [];
+        
+        // 1. Ricotta (Soglia totale 10)
+        let qRicotta = Math.ceil(10 - getVal('ricotta'));
+        if (qRicotta > 0) ordineSede.push(`${qRicotta} Ricotta`);
+        
+        // 2. No Lattosio (Arrivano in buste da 3. Soglia matematica totale: 15)
+        let qNoLatt = Math.ceil((15 - getVal('nolatt')) / 3);
+        if (qNoLatt > 0) ordineSede.push(`${qNoLatt} NoLatt`);
+        
+        // 3. Parmigiano 24m (Soglia totale 5)
+        let qParm = Math.ceil(5 - getVal('parmigiano'));
+        if (qParm > 0) ordineSede.push(`${qParm} Parmigiano`);
+        
+        // 4. Stracciatella (Soglia totale 8)
+        let qStracc = Math.ceil(8 - getVal('stracciatella'));
+        if (qStracc > 0) ordineSede.push(`${qStracc} Stracciatella`);
+        
+        // 5. Speck (Soglia 2. Sopra 0.3 ordina 1, sotto ordina per arrivare a 2)
+        let valSpeck = getVal('speck');
+        let qSpeck = 0;
+        if (valSpeck < 2) {
+            if (valSpeck > 0.3) {
+                qSpeck = 1;
+            } else {
+                qSpeck = Math.ceil(2 - valSpeck);
+            }
+        }
+        if (qSpeck > 0) ordineSede.push(`${qSpeck} Speck`);
+        
+        // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
+        if (getVal('mortadella') < 1) ordineSede.push(`1 Mortadella`);
+        
+        // 7. Crudo (Soglia 1.5. Arrotondato per eccesso, quindi se 0.5 ordina 1)
+        let valCrudo = getVal('crudo');
+        let qCrudo = Math.ceil(1.5 - valCrudo);
+        if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo`);
+        
+        // 8. Datterino Rosso (Soglie diverse per locale)
+        let sogliaDattRosso = (sede === 'Casta') ? 5 : (sede === 'Silea' ? 2 : 4);
+        let qDattRosso = Math.ceil(sogliaDattRosso - getVal('dattrosso'));
+        if (qDattRosso > 0) ordineSede.push(`${qDattRosso} Datt. rosso`);
+        
+        // 9. Datterino Giallo (1 cassa = 6 vaschette. Se in lista < 6, ordina 1 cassa intera)
+        if (getVal('dattgiallo') < 6) ordineSede.push(`1 Datt. Giallo o Arancione`);
+        
+        // 10. Sale fino (Soglia totale 3)
+        let qSale = Math.ceil(3 - getVal('sale'));
+        if (qSale > 0) ordineSede.push(`${qSale} sale fino (10kg)`);
+        
+        // Se c'è almeno un articolo da ordinare, costruisce il testo per questo locale
+        if (ordineSede.length > 0) {
+            testoOrdine += `${sede}\n`;
+            ordineSede.forEach(item => {
+                testoOrdine += `  ${item}\n`;
+            });
+            testoOrdine += `\n`; // Spazio tra un locale e l'altro
+        }
+    });
+    
+    return testoOrdine.trim();
+}
+
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
     document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;

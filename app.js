@@ -100,6 +100,27 @@ function filtraLista() {
             title.style.display = (q === "") ? "block" : "none"; 
         });
     }
+
+    // === NUOVA LOGICA: MOSTRA/NASCONDI I TASTI DEGLI ORDINI ===
+    const btnTonon = document.getElementById('btn-invia-tonon');
+    const btnBarbazza = document.getElementById('btn-invia-barbazza');
+    const btnMetro = document.getElementById('btn-invia-metro');
+
+    // 1. Prima nasconde tutti i tasti per azzerare la situazione
+    if (btnTonon) btnTonon.style.display = 'none';
+    if (btnBarbazza) btnBarbazza.style.display = 'none';
+    if (btnMetro) btnMetro.style.display = 'none';
+
+    // 2. Mostra il tasto corretto in base a ciò che stai cercando (q) o alla vista selezionata (p)
+    if (p === "TONON" || q === "tonon") {
+        if (btnTonon) btnTonon.style.display = 'block';
+    } 
+    if (p === "BARBAZZA" || q === "barbazza") {
+        if (btnBarbazza) btnBarbazza.style.display = 'block';
+    } 
+    if (p === "METRO" || q === "metro") {
+        if (btnMetro) btnMetro.style.display = 'block';
+    }
 }
 function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     const cont = document.getElementById('contenitore-lista');
@@ -839,6 +860,31 @@ function generaOrdineMetro(dati) {
     return testoOrdine.trim();
 }
 
+document.getElementById('btn-invia-metro').addEventListener('click', function() {
+    // Legge i dati REALI salvati nella memoria del dispositivo per le 3 sedi
+    let tuttiIDati = {
+        'BIBAN': JSON.parse(localStorage.getItem('inventario_dati_BIBAN')) || {},
+        'CASTA': JSON.parse(localStorage.getItem('inventario_dati_CASTA')) || {},
+        'SILEA': JSON.parse(localStorage.getItem('inventario_dati_SILEA')) || {}
+    };
+
+    // Richiama la grande funzione matematica che abbiamo creato prima
+    let testoOrdine = generaOrdineMetro(tuttiIDati);
+
+    if (testoOrdine === "") {
+        alert("Nessun prodotto sotto soglia. Non c'è nulla da ordinare alla Metro!");
+        return;
+    }
+
+    // INSERISCI QUI IL NUMERO DI TELEFONO DELLA METRO (senza + o spazi)
+    let numeroTelefono = "390000000000"; 
+
+    // Crea il link per WhatsApp e lo apre
+    let urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(testoOrdine)}`;
+    window.open(urlWhatsApp, '_blank');
+});
+
+
 window.onload = async function() {
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
     document.getElementById('info-giorno').innerHTML = `Lista per <b>${nomiGiorni[domani.getDay()]}</b> ${isWeekendDomani?'(FESTIVO)':''}`;
@@ -854,7 +900,7 @@ document.addEventListener("visibilitychange", function() {
         if (document.activeElement) document.activeElement.blur(); 
     } else if (document.visibilityState === "visible") {
         // Diamo 4 secondi pieni al telefono per riattivare l'antenna internet
-        setTimeout(syncSicuro, 4000);
+        setTimeout(syncCloud, 4000);
     }
 });
 
@@ -863,6 +909,6 @@ window.addEventListener("pageshow", function(e) {
     if (e.persisted) {
         modificheNonSalvate = false;
         // Diamo 4 secondi pieni anche in caso di scongelamento memoria
-        setTimeout(syncSicuro, 4000);
+        setTimeout(syncCloud, 4000);
     }
 });

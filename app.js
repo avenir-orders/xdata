@@ -750,6 +750,7 @@ function inviaOrdineTonon() {
     window.open(urlWhatsApp, '_blank');
 }
 
+
 function generaOrdineMetro(dati) {
     let testoOrdine = "";
     const sedi = ['Biban', 'Casta', 'Silea'];
@@ -810,21 +811,37 @@ function generaOrdineMetro(dati) {
         // 9. Datterino Giallo (Soglia 6 vaschette, che formano 1 cassa)
         if (getVal('dattgiallo') < 6) ordineSede.push(`1 Datt. Giallo o Arancione`);
         
-        // 10. Sale fino (Soglia totale 3)
-        let qSale = Math.ceil(3 - getVal('sale'));
-        if (qSale > 0) ordineSede.push(`${qSale} sale fino (10kg)`);
-        
-        // 11. Noci (Soglia totale 3 per tutti)
+        // 10. Noci (Soglia totale 3 per tutti)
         let qNoci = Math.ceil(3 - getVal('noci'));
         if (qNoci > 0) ordineSede.push(`${qNoci} Noci`);
 
-        // 12. Pellicola (Soglia: Casta/Biban 6, Silea 2)
+        // 11. Pellicola (Soglia: Casta/Biban 6, Silea 2)
         let sogliaPellicola = (sede === 'Silea') ? 2 : 6;
         let qPellicola = Math.ceil(sogliaPellicola - getVal('pellicola'));
         if (qPellicola > 0) ordineSede.push(`${qPellicola} Pellicola`);
 
-        // 13. Patate (FREEZER) - Regola speciale: si ordina SOLO a Biban leggendo i dati di Casta
+        // 12. Coca Cola (Senza N. - casse da 24)
+        let qCoca = Math.ceil((48 - getVal('cocacola')) / 24);
+        if (qCoca > 0) ordineSede.push(`${qCoca} casse Coca Cola`);
+
+        // 13. Coca Cola zero (Senza N. - casse da 24)
+        let qCocaZero = Math.ceil((48 - getVal('cocacolazero')) / 24);
+        if (qCocaZero > 0) ordineSede.push(`${qCocaZero} casse Coca Cola zero`);
+
+        // 14. Ichnusa non filtrata (Senza N. - casse da 15)
+        let qIchnusa = Math.ceil((30 - getVal('ichnusa')) / 15);
+        if (qIchnusa > 0) ordineSede.push(`${qIchnusa} casse Ichnusa non filtrata`);
+
+        // 15. Pedavena (Senza N. - casse da 15)
+        let qPedavena = Math.ceil((30 - getVal('pedavena')) / 15);
+        if (qPedavena > 0) ordineSede.push(`${qPedavena} casse Pedavena`);
+
+        // === REGOLE ESCLUSIVE PER BIBAN ===
         if (sede === 'Biban') {
+            // Sale fino (Soglia totale 3, ordinato SOLO a Biban)
+            let qSale = Math.ceil(3 - getVal('sale'));
+            if (qSale > 0) ordineSede.push(`${qSale} sale fino (10kg)`);
+
             // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5.
             let qPatateFritte = Math.ceil((25 - getValCasta('patatefritte')) / 5);
             if (qPatateFritte > 0) ordineSede.push(`${qPatateFritte} scatole Patate fritte`);
@@ -833,22 +850,6 @@ function generaOrdineMetro(dati) {
             let qPatateForno = Math.ceil((25 - getValCasta('patateforno')) / 5);
             if (qPatateForno > 0) ordineSede.push(`${qPatateForno} scatole Patate al forno`);
         }
-
-        // 14. Coca Cola N. (Soglia 48 bottiglie, ordinate in casse da 24)
-        let qCoca = Math.ceil((48 - getVal('cocacola')) / 24);
-        if (qCoca > 0) ordineSede.push(`${qCoca} casse Coca Cola N.`);
-
-        // 15. Coca Cola zero N. (Soglia 48 bottiglie, ordinate in casse da 24)
-        let qCocaZero = Math.ceil((48 - getVal('cocacolazero')) / 24);
-        if (qCocaZero > 0) ordineSede.push(`${qCocaZero} casse Coca Cola zero N.`);
-
-        // 16. Ichnusa non filtrata N. (Soglia 30 bottiglie, ordinate in scatole da 15)
-        let qIchnusa = Math.ceil((30 - getVal('ichnusa')) / 15);
-        if (qIchnusa > 0) ordineSede.push(`${qIchnusa} scatole Ichnusa non filtrata N.`);
-
-        // 17. Pedavena N. (Soglia 30 bottiglie, ordinate in scatole da 15)
-        let qPedavena = Math.ceil((30 - getVal('pedavena')) / 15);
-        if (qPedavena > 0) ordineSede.push(`${qPedavena} scatole Pedavena N.`);
         
         // Costruzione finale del testo per la sede attuale
         if (ordineSede.length > 0) {

@@ -897,22 +897,49 @@ window.onload = async function() {
     await syncCloud(); 
 };
 
+// === FUNZIONE DEDICATA AL RISVEGLIO DELL'APP ===
+function risveglioApp() {
+    const status = document.getElementById('sync-status');
+    if (status) {
+        status.innerText = '🔄 Aggiornamento dati al rientro...';
+        status.style.color = "#e67e22"; 
+    }
+    
+    // Disattiva istantaneamente lo scudo per forzare il download dei dati freschi
+    ultimoSalvataggio = 0; 
+    syncCloud();
+}
+
+// === CRONOMETRO BACKGROUND ===
+let orarioUscita = Date.now(); // Registra il momento in cui apri l'app
+
 // GESTIONE USCITA E RIENTRO DALL'APP
 document.addEventListener("visibilitychange", function() {
     if (document.visibilityState === "hidden") {
         modificheNonSalvate = false; 
         if (document.activeElement) document.activeElement.blur(); 
+        
+        // Fai scattare il cronometro appena l'app va in background
+        orarioUscita = Date.now(); 
+        
     } else if (document.visibilityState === "visible") {
-        // Diamo 4 secondi pieni al telefono per riattivare l'antenna internet
-        setTimeout(syncCloud, 4000);
+        // Calcola quanto tempo sei stata fuori (in millisecondi)
+        let tempoFuori = Date.now() - orarioUscita;
+        
+        // 5 minuti equivalgono a 300.000 millisecondi (5 * 60 * 1000)
+        // Se sei stata via per PIÙ di 5 minuti, fa l'aggiornamento automatico
+        if (tempoFuori > 300000) {
+            setTimeout(risveglioApp, 2500);
+        }
+        // Se sei stata via per MENO di 5 minuti, l'app non fa assolutamente nulla e ti lascia lavorare
     }
 });
 
-// GESTIONE "SCONGELAMENTO" MEMORIA
+// GESTIONE "SCONGELAMENTO" MEMORIA BROWSER
 window.addEventListener("pageshow", function(e) {
     if (e.persisted) {
         modificheNonSalvate = false;
-        // Diamo 4 secondi pieni anche in caso di scongelamento memoria
-        setTimeout(syncCloud, 4000);
+        // In caso di vero e proprio congelamento di sistema, forziamo l'aggiornamento per sicurezza
+        setTimeout(risveglioApp, 2500);
     }
 });

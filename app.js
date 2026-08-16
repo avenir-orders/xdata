@@ -677,7 +677,7 @@ const FORMATO_SCATOLA = {
 const FABBISOGNO_TONON = {
     SILEA: {
         // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer (2 giorni)
-        CONSEGNA_1: { mozza: 22, bufala: 24, provola: 8 }, // <--- MODIFICA QUESTI NUMERI
+        CONSEGNA_1: { mozza: 24, bufala: 24, provola: 4 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Mercoledì -> Arriva Giovedì -> Copre Gio, Ven, Sab, Dom (4 giorni)
         CONSEGNA_2: { mozza: 84, bufala: 72, provola: 7 }
     },
@@ -685,13 +685,13 @@ const FABBISOGNO_TONON = {
         // Ordine Domenica -> Arriva Lunedì -> Copre Lun, Mar, Mer, Gio (4 giorni)
         CONSEGNA_1: { mozza: 50, bufala: 48, provola: 10 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Giovedì -> Arriva Venerdì -> Copre Ven, Sab, Dom (3 giorni)
-        CONSEGNA_2: { mozza: 84, bufala: 72, provola: 8 }
+        CONSEGNA_2: { mozza: 84, bufala: 72, provola: 10 }
     },
     BIBAN: {
         // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer, Gio (3 giorni)
         CONSEGNA_1: { mozza: 50, bufala: 48, provola: 8 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Giovedì -> Arriva Venerdì -> Copre Ven, Sab, Dom, Lun (4 giorni)
-        CONSEGNA_2: { mozza: 90, bufala: 72, provola: 7 }
+        CONSEGNA_2: { mozza: 90, bufala: 72, provola: 10 }
     }
 };
 

@@ -476,19 +476,37 @@ async function syncCloud(data = null) {
             status.innerHTML = 'MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Puoi compilare e salvare normalmente: i dati resteranno al sicuro sul dispositivo. Quando torna la rete, premi di nuovo SALVA per inviarli al Cloud)</span>'; 
             status.style.color = "#e67e22"; 
         }
-  } finally {
+} finally {
         if (typeof creaLista === 'function' && !data) {
-            const casellaAttiva = document.activeElement && document.activeElement.tagName === 'INPUT';
             const menuAttivo = document.getElementById('pizzeria') ? document.getElementById('pizzeria').value : '';
             
-            // Se non ci sono modifiche in sospeso E l'utente non sta guardando le viste speciali (Tutte/Archivio/Fornitori) -> aggiorna la grafica
-            if (!modificheNonSalvate && !casellaAttiva && menuAttivo !== 'TUTTE' && menuAttivo !== 'ARCHIVIO' && menuAttivo !== 'FORNITORI') {
-                creaLista();
+            // 1. Se sei nella vista TUTTE, la ricarica mantenendo il filtro Fornitore
+            if (menuAttivo === 'TUTTE') {
+                const filtroFornitore = document.getElementById('filtro-fornitori') ? document.getElementById('filtro-fornitori').value : 'TUTTI';
+                generaVistaTutte(filtroFornitore);
+            } 
+            // 2. Se sei in una lista singola (es. Casta), aggiorna in modo "fluido" solo i numeri, mantenendo la tua posizione di scorrimento!
+            else if (menuAttivo !== 'ARCHIVIO' && menuAttivo !== 'FORNITORI' && menuAttivo !== '') {
+                const datiAggiornati = JSON.parse(localStorage.getItem('inventario_dati_' + menuAttivo)) || {};
+                
+                ingredienti.forEach((ing, i) => {
+                    const input = document.getElementById(`sel-${i}`);
+                    // Aggiorna il numero solo se non stai letteralmente cliccando dentro quella precisa casella in questo istante
+                    if (input && document.activeElement !== input) { 
+                        const nuovoValore = datiAggiornati[ing.nome] || "";
+                        if (input.value !== nuovoValore) {
+                            input.value = nuovoValore; // Inietta il nuovo dato
+                            const soglia = isWeekendDomani ? ing.we : ing.fer;
+                            valuta(i, soglia); // Aggiorna i colori verde/rosso
+                        }
+                    }
+                });
             }
         }
     }
 }
-    
+
+
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }
 function azzeraLista() { if(confirm("Cancellare dati?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }

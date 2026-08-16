@@ -662,7 +662,7 @@ function inviaOrdineBarbazza() {
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
 }
 // ============================================================================
-// GESTIONE ORDINI FORNITORE: TONON (CALIBRATO 100% SU TUTTE E 3 LE SEDI)
+// GESTIONE ORDINI FORNITORE: TONON (DOPPIA FASCIA INFRAS/WEEKEND)
 // ============================================================================
 
 const FORMATO_SCATOLA = {
@@ -671,30 +671,34 @@ const FORMATO_SCATOLA = {
     provola: 1   // 1 pezzo = 1 provola
 };
 
-// Tetti massimi del weekend calibrati per produrre esattamente:
-// SILEA: 12, 2, 5 | CASTA: 11, 2, 7 | BIBAN: 12, 1, 2
+// Tetti massimi sdoppiati per consegna.
+// CONSEGNA_1: Arrivo inizio settimana
+// CONSEGNA_2: Arrivo per il weekend
 const FABBISOGNO_TONON = {
     SILEA: {
-        mozza: 84,   // 84 - 12 kg in negozio = 72 kg -> 12 mozza
-        bufala: 72,  // 72 - 24 pz in negozio = 48 pz -> 2 bufala
-        provola: 7   // 7 - 2 pz in negozio = 5 provola
+        // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer (2 giorni)
+        CONSEGNA_1: { mozza: 22, bufala: 24, provola: 8 }, // <--- MODIFICA QUESTI NUMERI
+        // Ordine Mercoledì -> Arriva Giovedì -> Copre Gio, Ven, Sab, Dom (4 giorni)
+        CONSEGNA_2: { mozza: 84, bufala: 72, provola: 7 }
     },
     CASTA: {
-        mozza: 84,   // 84 - 18 kg in negozio = 66 kg -> 11 mozza
-        bufala: 72,  // 72 - 24 pz in negozio = 48 pz -> 2 bufala
-        provola: 8   // 8 - 1 pz in negozio = 7 provola
+        // Ordine Domenica -> Arriva Lunedì -> Copre Lun, Mar, Mer, Gio (4 giorni)
+        CONSEGNA_1: { mozza: 50, bufala: 48, provola: 10 }, // <--- MODIFICA QUESTI NUMERI
+        // Ordine Giovedì -> Arriva Venerdì -> Copre Ven, Sab, Dom (3 giorni)
+        CONSEGNA_2: { mozza: 84, bufala: 72, provola: 8 }
     },
     BIBAN: {
-        mozza: 90,   // 90 - 18 kg in negozio = 72 kg -> 12 mozza
-        bufala: 72,  // 72 - 48 pz in negozio = 24 pz -> 1 bufala
-        provola: 7   // 7 - 5 pz in negozio = 2 provola
+        // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer, Gio (3 giorni)
+        CONSEGNA_1: { mozza: 50, bufala: 48, provola: 8 }, // <--- MODIFICA QUESTI NUMERI
+        // Ordine Giovedì -> Arriva Venerdì -> Copre Ven, Sab, Dom, Lun (4 giorni)
+        CONSEGNA_2: { mozza: 90, bufala: 72, provola: 7 }
     }
 };
 
 const CONSEGNE_TONON = {
-    SILEA: [2, 4], // Mar, Gio
-    CASTA: [1, 5], // Lun, Ven
-    BIBAN: [2, 5]  // Mar, Ven
+    SILEA: [2, 4], // 2=Mar, 4=Gio
+    CASTA: [1, 5], // 1=Lun, 5=Ven
+    BIBAN: [2, 5]  // 2=Mar, 5=Ven
 };
 
 const NOMI_GIORNI_BREVI = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
@@ -703,14 +707,10 @@ function cercaGiacenza(inventario, tipo) {
     for (const key in inventario) {
         const keyLower = key.toLowerCase().trim();
         let match = false;
-
-        if (tipo === 'mozza') {
-            match = keyLower.includes('mozza') && !keyLower.includes('bufala');
-        } else if (tipo === 'bufala') {
-            match = keyLower.includes('bufala');
-        } else if (tipo === 'provola') {
-            match = keyLower.includes('provola');
-        }
+        
+        if (tipo === 'mozza') match = keyLower.includes('mozza') && !keyLower.includes('bufala');
+        else if (tipo === 'bufala') match = keyLower.includes('bufala');
+        else if (tipo === 'provola') match = keyLower.includes('provola');
 
         if (match) {
             const num = parseFloat(String(inventario[key]).replace(/[^0-9.]/g, ''));
@@ -723,32 +723,46 @@ function cercaGiacenza(inventario, tipo) {
 function calcolaFinestraConsegnaTonon(sede, dataRiferimento = new Date()) {
     const giornoAttuale = dataRiferimento.getDay();
     const giorniConsegna = CONSEGNE_TONON[sede];
-    
-    let prossimoGiorno = giorniConsegna.find(g => g >= giornoAttuale);
-    if (prossimoGiorno === undefined) prossimoGiorno = giorniConsegna[0]; 
-    
-    return { giornoConsegnaBreve: NOMI_GIORNI_BREVI[prossimoGiorno] };
+
+    // Cerca il primo giorno di consegna successivo a oggi
+    let indiceConsegna = giorniConsegna.findIndex(g => g > giornoAttuale);
+
+    // Se faccio l'ordine nel weekend e non trova giorni maggiori, riparte dalla prima consegna della settimana (indice 0)
+    if (indiceConsegna === -1) {
+        indiceConsegna = 0;
+    }
+
+    return {
+        giornoConsegnaBreve: NOMI_GIORNI_BREVI[giorniConsegna[indiceConsegna]],
+        tipoConsegna: indiceConsegna === 0 ? 'CONSEGNA_1' : 'CONSEGNA_2'
+    };
 }
 
 function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
     const finestra = calcolaFinestraConsegnaTonon(sedeKey);
     const rawData = localStorage.getItem('inventario_dati_' + sedeKey);
     const inventario = rawData ? JSON.parse(rawData) : {};
-    
+
     const giacenze = {
         mozza: cercaGiacenza(inventario, 'mozza'),
         bufala: cercaGiacenza(inventario, 'bufala'),
         provola: cercaGiacenza(inventario, 'provola')
     };
 
+    // Prende i target specifici in base al tipo di consegna che sta calcolando
+    const targetSede = FABBISOGNO_TONON[sedeKey][finestra.tipoConsegna];
     const ordineScatole = {};
+
     ['mozza', 'bufala', 'provola'].forEach(prodotto => {
-        const target = FABBISOGNO_TONON[sedeKey][prodotto] || 0;
+        const target = targetSede[prodotto] || 0;
         const daOrdinareNetto = Math.max(0, target - giacenze[prodotto]);
         ordineScatole[prodotto] = Math.ceil(daOrdinareNetto / FORMATO_SCATOLA[prodotto]);
     });
 
-    return `${nomeDisplay} ${finestra.giornoConsegnaBreve}\n` +
+    // Aggiunge un'etichetta nel messaggio per farti sapere quale logica sta usando
+    const labelTipo = finestra.tipoConsegna === 'CONSEGNA_1' ? 'Infrasettimanale' : 'Weekend';
+
+    return `${nomeDisplay} ${finestra.giornoConsegnaBreve} (${labelTipo})\n` +
            `  ${ordineScatole.mozza} mozza\n` +
            `  ${ordineScatole.bufala} bufala\n` +
            `  ${ordineScatole.provola} provola`;
@@ -767,7 +781,6 @@ function inviaOrdineTonon() {
     const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(messaggioFinale)}`;
     window.open(urlWhatsApp, '_blank');
 }
-
 
 function generaOrdineMetro(dati) {
     let testoOrdine = "";

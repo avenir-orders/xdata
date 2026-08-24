@@ -677,13 +677,13 @@ const FORMATO_SCATOLA = {
 const FABBISOGNO_TONON = {
     SILEA: {
         // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer (2 giorni)
-        CONSEGNA_1: { mozza: 24, bufala: 24, provola: 4 }, // <--- MODIFICA QUESTI NUMERI
+        CONSEGNA_1: { mozza: 36, bufala: 48, provola: 4 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Mercoledì -> Arriva Giovedì -> Copre Gio, Ven, Sab, Dom (4 giorni)
         CONSEGNA_2: { mozza: 84, bufala: 72, provola: 7 }
     },
     CASTA: {
         // Ordine Domenica -> Arriva Lunedì -> Copre Lun, Mar, Mer, Gio (4 giorni)
-        CONSEGNA_1: { mozza: 50, bufala: 48, provola: 10 }, // <--- MODIFICA QUESTI NUMERI
+        CONSEGNA_1: { mozza: 50, bufala: 72, provola: 10 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Giovedì -> Arriva Venerdì -> Copre Ven, Sab, Dom (3 giorni)
         CONSEGNA_2: { mozza: 84, bufala: 72, provola: 10 }
     },
@@ -737,7 +737,6 @@ function calcolaFinestraConsegnaTonon(sede, dataRiferimento = new Date()) {
         tipoConsegna: indiceConsegna === 0 ? 'CONSEGNA_1' : 'CONSEGNA_2'
     };
 }
-
 function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
     const finestra = calcolaFinestraConsegnaTonon(sedeKey);
     const rawData = localStorage.getItem('inventario_dati_' + sedeKey);
@@ -759,10 +758,8 @@ function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
         ordineScatole[prodotto] = Math.ceil(daOrdinareNetto / FORMATO_SCATOLA[prodotto]);
     });
 
-    // Aggiunge un'etichetta nel messaggio per farti sapere quale logica sta usando
-    const labelTipo = finestra.tipoConsegna === 'CONSEGNA_1' ? 'Infrasettimanale' : 'Weekend';
-
-    return `${nomeDisplay} ${finestra.giornoConsegnaBreve} (${labelTipo})\n` +
+    // Testo pulito senza etichette infrasettimanale/weekend
+    return `${nomeDisplay} ${finestra.giornoConsegnaBreve}\n` +
            `  ${ordineScatole.mozza} mozza\n` +
            `  ${ordineScatole.bufala} bufala\n` +
            `  ${ordineScatole.provola} provola`;

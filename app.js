@@ -543,7 +543,7 @@ function inviaWhatsApp() {
         if(s) msg += processaLista(p, JSON.parse(s));
     }
     if (msg.trim() === "*REPORT MANCANZE*" || msg.trim() === `*MANCANZE ${p}*`) msg = `✅ Tutto OK per ${p === "TUTTE" ? "tutte" : p}`;
-    window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
+   mostraAnteprimaOrdine(msg);
 }
 function inviaOrdineBarbazza() {
     let msg = "";
@@ -659,7 +659,7 @@ function inviaOrdineBarbazza() {
     }
 
     // Apre WhatsApp
-    window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
+   mostraAnteprimaOrdine(msg);
 }
 // ============================================================================
 // GESTIONE ORDINI FORNITORE: TONON (DOPPIA FASCIA INFRAS/WEEKEND)
@@ -776,7 +776,7 @@ function inviaOrdineTonon() {
         navigator.clipboard.writeText(messaggioFinale).catch(err => console.error("Errore copia appunti:", err));
     }
     const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(messaggioFinale)}`;
-    window.open(urlWhatsApp, '_blank');
+   mostraAnteprimaOrdine(messaggioFinale);
 }
 
 function generaOrdineMetro(dati) {
@@ -909,7 +909,7 @@ function inviaOrdineMetro() {
     }
 
   // Apre WhatsApp e ti fa scegliere il contatto a cui inviarlo
-    window.location.href = "whatsapp://send?text=" + encodeURIComponent(testoOrdine);
+   mostraAnteprimaOrdine(testoOrdine);
 }
 // Se l'utente è nella vista singola e preme il tasto in index.html, usa questa stessa funzione
 const btnMetroFisico = document.getElementById('btn-invia-metro');
@@ -971,3 +971,39 @@ window.addEventListener("pageshow", function(e) {
         setTimeout(risveglioApp, 2500);
     }
 });
+// ============================================================================
+// SISTEMA DI ANTEPRIMA ORDINI E MESSAGGI
+// ============================================================================
+function mostraAnteprimaOrdine(testo) {
+    let modal = document.getElementById('modal-anteprima');
+    
+    // Se il popup non esiste, lo crea al volo
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-anteprima';
+        modal.style.cssText = "display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border-radius:15px; z-index:10001; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5); flex-direction:column; box-sizing:border-box;";
+        modal.innerHTML = `
+            <h3 style="margin-top:0; color:var(--primary); text-align:center;">Anteprima Messaggio</h3>
+            <p style="font-size:12px; color:#666; text-align:center; margin-top:-10px;">Puoi modificare il testo qui sotto prima di inviare</p>
+            <textarea id="testo-anteprima" style="width:100%; height:250px; padding:10px; border:1px solid #ccc; border-radius:8px; margin-bottom:15px; resize:none; font-family:sans-serif; font-size:14px; box-sizing:border-box;"></textarea>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="document.getElementById('modal-anteprima').style.display='none'; document.getElementById('overlay').style.display='none';" style="padding:12px; border:none; border-radius:8px; background:#e74c3c; color:white; font-weight:bold; cursor:pointer; flex:1;">ANNULLA</button>
+                <button onclick="confermaInvioWhatsApp()" style="padding:12px; border:none; border-radius:8px; background:#25D366; color:white; font-weight:bold; cursor:pointer; flex:1;">INVIA A WHATSAPP</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Inserisce il testo generato e mostra il popup
+    document.getElementById('testo-anteprima').value = testo;
+    document.getElementById('overlay').style.display = 'block';
+    modal.style.display = 'flex';
+}
+
+// Quando premi INVIA, legge il testo (comprese tue eventuali modifiche manuali) e apre WhatsApp
+function confermaInvioWhatsApp() {
+    let testoFinale = document.getElementById('testo-anteprima').value;
+    document.getElementById('modal-anteprima').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+    window.location.href = "whatsapp://send?text=" + encodeURIComponent(testoFinale);
+}

@@ -783,37 +783,50 @@ function generaOrdineMetro(dati) {
     let testoOrdine = "";
     const sedi = ['Biban', 'Casta', 'Silea'];
     
+    // === NUOVO MOTORE DI RICERCA INTELLIGENTE ===
+    // Ignora maiuscole/minuscole. Se matchEsatto è true, cerca la parola precisa.
+    const trovaGiacenza = (listaLocale, nomeCercato, matchEsatto = false) => {
+        if (!listaLocale) return 0;
+        const ricerca = nomeCercato.toLowerCase().trim();
+        for (let key in listaLocale) {
+            const keyCorrente = key.toLowerCase().trim();
+            let trovato = matchEsatto ? (keyCorrente === ricerca) : keyCorrente.includes(ricerca);
+            
+            if (trovato) {
+                const v = estraiNumeroIntelligente(listaLocale[key]);
+                return isNaN(v) ? 0 : v;
+            }
+        }
+        return 0; // se non trova nulla
+    };
+
     // Preparo la lettura del magazzino di Casta per la regola speciale delle patate
     const listaCasta = dati['CASTA'] || {};
-    const getValCasta = (nome) => parseFloat(listaCasta[nome]) || 0;
     
     sedi.forEach(sede => {
         let sedeKey = sede.toUpperCase(); // Es: 'BIBAN'
         let lista = dati[sedeKey] || {};
         
-        // Funzione per leggere i numeri del locale attuale in modo sicuro
-        const getVal = (nome) => parseFloat(lista[nome]) || 0;
-        
         let ordineSede = [];
         
         // 1. Ricotta (Soglia totale 10)
-        let qRicotta = Math.ceil(10 - getVal('ricotta'));
+        let qRicotta = Math.ceil(10 - trovaGiacenza(lista, 'ricotta'));
         if (qRicotta > 0) ordineSede.push(`${qRicotta} Ricotta`);
         
         // 2. No Lattosio (Soglia totale 15, buste da 3)
-        let qNoLatt = Math.ceil((15 - getVal('nolatt')) / 3);
+        let qNoLatt = Math.ceil((15 - trovaGiacenza(lista, 'lattosio')) / 3);
         if (qNoLatt > 0) ordineSede.push(`${qNoLatt} NoLatt`);
         
-        // 3. Parmigiano 24m (Soglia totale 5)
-        let qParm = Math.ceil(5 - getVal('parmigiano'));
+        // 3. Parmigiano 24m (Cerca ESATTAMENTE "parmigiano 24m" come hai chiesto)
+        let qParm = Math.ceil(5 - trovaGiacenza(lista, 'parmigiano 24m'));
         if (qParm > 0) ordineSede.push(`${qParm} Parmigiano`);
         
         // 4. Stracciatella (Soglia totale 8)
-        let qStracc = Math.ceil(8 - getVal('stracciatella'));
+        let qStracc = Math.ceil(8 - trovaGiacenza(lista, 'stracciatella'));
         if (qStracc > 0) ordineSede.push(`${qStracc} Stracciatella`);
         
         // 5. Speck (Soglia 2. Sopra 0.3 ordina 1, sotto ordina per arrivare a 2)
-        let valSpeck = getVal('speck');
+        let valSpeck = trovaGiacenza(lista, 'speck');
         let qSpeck = 0;
         if (valSpeck < 2) {
             if (valSpeck > 0.3) {
@@ -825,57 +838,60 @@ function generaOrdineMetro(dati) {
         if (qSpeck > 0) ordineSede.push(`${qSpeck} Speck`);
         
         // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
-        if (getVal('mortadella') < 1) ordineSede.push(`1 Mortadella`);
+        if (trovaGiacenza(lista, 'mortadella') < 1) ordineSede.push(`1 Mortadella`);
         
         // 7. Crudo (Soglia 1.5. Arrotondato per eccesso)
-        let qCrudo = Math.ceil(1.5 - getVal('crudo'));
+        let qCrudo = Math.ceil(1.5 - trovaGiacenza(lista, 'crudo'));
         if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo`);
         
         // 8. Datterino Rosso (Soglie: Casta 5, Silea 2, Biban 4)
         let sogliaDattRosso = (sede === 'Casta') ? 5 : (sede === 'Silea' ? 2 : 4);
-        let qDattRosso = Math.ceil(sogliaDattRosso - getVal('dattrosso'));
+        let giacDattRosso = trovaGiacenza(lista, 'rosso') || trovaGiacenza(lista, 'cass. datterino');
+        let qDattRosso = Math.ceil(sogliaDattRosso - giacDattRosso);
         if (qDattRosso > 0) ordineSede.push(`${qDattRosso} Datt. rosso`);
         
         // 9. Datterino Giallo (Soglia 6 vaschette, che formano 1 cassa)
-        if (getVal('dattgiallo') < 6) ordineSede.push(`1 Datt. Giallo o Arancione`);
+        if (trovaGiacenza(lista, 'giallo') < 6) ordineSede.push(`1 Datt. Giallo o Arancione`);
         
-        // 10. Noci (Soglia totale 3 per tutti)
-        let qNoci = Math.ceil(3 - getVal('noci'));
+        // 10. Noci (Soglia totale 3 per tutti - Ora trova in automatico anche "Noci" maiuscolo)
+        let qNoci = Math.ceil(3 - trovaGiacenza(lista, 'noci'));
         if (qNoci > 0) ordineSede.push(`${qNoci} Noci`);
 
         // 11. Pellicola (Soglia: Casta/Biban 6, Silea 2)
         let sogliaPellicola = (sede === 'Silea') ? 2 : 6;
-        let qPellicola = Math.ceil(sogliaPellicola - getVal('pellicola'));
+        let qPellicola = Math.ceil(sogliaPellicola - trovaGiacenza(lista, 'pellicola'));
         if (qPellicola > 0) ordineSede.push(`${qPellicola} Pellicola`);
 
         // 12. Coca Cola (Senza N. - casse da 24)
-        let qCoca = Math.ceil((48 - getVal('cocacola')) / 24);
+        let qCoca = Math.ceil((48 - trovaGiacenza(lista, 'coca cola n.')) / 24);
         if (qCoca > 0) ordineSede.push(`${qCoca} casse Coca Cola`);
 
         // 13. Coca Cola zero (Senza N. - casse da 24)
-        let qCocaZero = Math.ceil((48 - getVal('cocacolazero')) / 24);
+        let qCocaZero = Math.ceil((48 - trovaGiacenza(lista, 'coca cola zero')) / 24);
         if (qCocaZero > 0) ordineSede.push(`${qCocaZero} casse Coca Cola zero`);
 
         // 14. Ichnusa non filtrata (Senza N. - casse da 15)
-        let qIchnusa = Math.ceil((30 - getVal('ichnusa')) / 15);
+        let qIchnusa = Math.ceil((30 - trovaGiacenza(lista, 'ichnusa')) / 15);
         if (qIchnusa > 0) ordineSede.push(`${qIchnusa} casse Ichnusa non filtrata`);
 
         // 15. Pedavena (Senza N. - casse da 15)
-        let qPedavena = Math.ceil((30 - getVal('pedavena')) / 15);
+        let qPedavena = Math.ceil((30 - trovaGiacenza(lista, 'pedavena')) / 15);
         if (qPedavena > 0) ordineSede.push(`${qPedavena} casse Pedavena`);
 
         // === REGOLE ESCLUSIVE PER BIBAN ===
         if (sede === 'Biban') {
-            // Sale fino (Soglia totale 3, ordinato SOLO a Biban)
-            let qSale = Math.ceil(3 - getVal('sale'));
-            if (qSale > 0) ordineSede.push(`${qSale} sale fino (10kg)`);
+            // Sale (Soglia totale 3, ordinato SOLO a Biban)
+            // Il 'true' finale impone all'app di cercare ESATTAMENTE la parola "sale" (ignorando maiuscole/minuscole) e non parole simili.
+            let giacenzaSale = trovaGiacenza(lista, 'sale', true);
+            let qSale = Math.ceil(3 - giacenzaSale);
+            if (qSale > 0) ordineSede.push(`${qSale} sale (10kg)`);
 
             // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5.
-            let qPatateFritte = Math.ceil((25 - getValCasta('patatefritte')) / 5);
+            let qPatateFritte = Math.ceil((25 - trovaGiacenza(listaCasta, 'patate fritte')) / 5);
             if (qPatateFritte > 0) ordineSede.push(`${qPatateFritte} scatole Patate fritte`);
             
             // Patate al forno: soglia 25 sacchetti. Arrivano in scatole da 5.
-            let qPatateForno = Math.ceil((25 - getValCasta('patateforno')) / 5);
+            let qPatateForno = Math.ceil((25 - trovaGiacenza(listaCasta, 'patate al forno')) / 5);
             if (qPatateForno > 0) ordineSede.push(`${qPatateForno} scatole Patate al forno`);
         }
         

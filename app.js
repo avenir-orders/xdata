@@ -633,7 +633,7 @@ function inviaOrdineBarbazza() {
             // (Se scendono a 0, ordinerà comunque 1 secchio. Se ne vuoi 2 quando sei a zero, fammelo sapere!)
             let giacenzaOlive = calcolaGiacenza(d, "olive");
             if (giacenzaOlive <= 4) {
-                aggiungiAllOrdine("secchi di Olive", 1);
+                aggiungiAllOrdine("Olive", 1);
             }
           
             // Regola speciale: Pelati Salsa (Solo CASTA)

@@ -628,11 +628,12 @@ function inviaOrdineBarbazza() {
             if (giacenzaTonnoPV <= 3) {
                 aggiungiAllOrdine("Tonno", 1);
             }
-            // Regola speciale: Olive (Secchi da 5 buste per arrivare a ~9)
-            let giacenzaOlive = calcolaGiacenza(d, "Olive (buste)");
-            let secchiOlive = Math.round((5 - giacenzaOlive) / 5);
-           if (secchiOlive > 0) {
-                aggiungiAllOrdine("Olive", secchiOlive);
+           // Regola speciale: Olive (Secchi da 5 buste)
+            // Se scendono a 4 buste o meno, ordina in automatico 1 secchio. 
+            // (Se scendono a 0, ordinerà comunque 1 secchio. Se ne vuoi 2 quando sei a zero, fammelo sapere!)
+            let giacenzaOlive = calcolaGiacenza(d, "olive");
+            if (giacenzaOlive <= 4) {
+                aggiungiAllOrdine("secchi di Olive", 1);
             }
           
             // Regola speciale: Pelati Salsa (Solo CASTA)

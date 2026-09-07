@@ -449,13 +449,35 @@ async function syncCloud(data = null) {
                 return; 
             }
 
-            const res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { 
-                redirect: 'follow',
-                signal: controller.signal
-            });
+           // === MOTORE "CODA SILENZIOSA" (Anti-Ingorgo Google) ===
+            let res = null;
+            let success = false;
+            let tentativi = 0;
+
+            // Riprova fino a 3 volte se Google è occupato
+            while (tentativi < 3 && !success) {
+                try {
+                    res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { 
+                        redirect: 'follow',
+                        signal: controller.signal
+                    });
+                    if (res.ok) {
+                        success = true;
+                    } else {
+                        tentativi++;
+                        // Se non è l'ultimo tentativo, aspetta 1.5 secondi prima di riprovare
+                        if (tentativi < 3) await new Promise(r => setTimeout(r, 1500));
+                    }
+                } catch (err) {
+                    tentativi++;
+                    if (tentativi === 3) throw err; // Solo al terzo fallimento consecutivo lancia l'allarme
+                    await new Promise(r => setTimeout(r, 1500)); // Aspetta in silenzio e riprova
+                }
+            }
+
             clearTimeout(timeoutId);
             
-            if (res.ok) {
+            if (success && res) {
                 const cloudData = await res.json();
                 if (cloudData && typeof cloudData === 'object') { 
                     Object.keys(cloudData).forEach(key => {
@@ -466,16 +488,23 @@ async function syncCloud(data = null) {
                 }
             }
         }
-  } catch (e) { 
+ } catch (e) { 
         clearTimeout(timeoutId);
         console.error("Errore Sync:", e);
         
         const status = document.getElementById('sync-status');
         if(status) {
-            // Inserisce il titolo arancione e le istruzioni in piccolo subito sotto
-            status.innerHTML = 'MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Puoi compilare e salvare normalmente: i dati resteranno al sicuro sul dispositivo. Quando torna la rete, premi di nuovo SALVA per inviarli al Cloud)</span>'; 
-            status.style.color = "#e67e22"; 
+            if (navigator.onLine) {
+                // Il telefono HA internet, ma Google ha fatto da "imbuto" perché siete in due
+                status.innerHTML = '🚦 Traffico sul Server (Accesso doppio)<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">Google sta gestendo un altro accesso. Puoi continuare a leggere o scrivere senza problemi, i dati sono salvati sul telefono!</span>'; 
+                status.style.color = "#e67e22"; 
+            } else {
+                // Manca DAVVERO la connessione internet (Wi-Fi staccato o no campo)
+                status.innerHTML = '✈️ MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Nessuna connessione. Puoi compilare e salvare: i dati restano al sicuro sul telefono. Quando torna la rete premi di nuovo SALVA).</span>'; 
+                status.style.color = "#e67e22"; 
+            }
         }
+
 } finally {
         if (typeof creaLista === 'function' && !data) {
             const menuAttivo = document.getElementById('pizzeria') ? document.getElementById('pizzeria').value : '';
@@ -589,7 +618,7 @@ function inviaOrdineBarbazza() {
                 { nome: "Brie", soglia: pv === "SILEA" ? 4 : 5 }, 
                 { nome: "Gorgonzola", soglia: pv === "SILEA" ? 2.5 : 3 },
                 { nome: "Asiago", soglia: 1 }, { nome: "Bresaola", soglia: 1 },
-                { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1 },
+                { nome: "Acciughe", soglia: 2 }, { nome: "Capperi", soglia: 1.5 },
                 { nome: "Semola", soglia: pv === "SILEA" ? 2 : 3 },
                { nome: "Cart.med", soglia: 8 }, { nome: "Cart.mezzi", soglia: 2 }
             ];

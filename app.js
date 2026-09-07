@@ -477,8 +477,17 @@ async function syncCloud(data = null) {
 
             clearTimeout(timeoutId);
             
-            if (success && res) {
+           if (success && res) {
                 const cloudData = await res.json();
+                
+                // === SCUDO ANTI-SOVRASCRITTURA (IL SALVAVITA) ===
+                // Se hai premuto SALVA mentre il telefono stava ancora scaricando, 
+                // cestiniamo i dati vecchi appena arrivati per proteggere i tuoi nuovi!
+                if (Date.now() - ultimoSalvataggio < 180000) {
+                    console.log("Scudo attivo: blocco sovrascrittura in ritardo.");
+                    return; 
+                }
+
                 if (cloudData && typeof cloudData === 'object') { 
                     Object.keys(cloudData).forEach(key => {
                         if(cloudData[key]) localStorage.setItem(key, cloudData[key]);

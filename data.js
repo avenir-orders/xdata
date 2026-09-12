@@ -43,6 +43,7 @@ const ingredienti = [
     { cat: "SALUMI", color: "var(--cat-salumi)", nome: "Bresaola", fer: 0.3, we: 0.5 },
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Uova bio", fer: 6, we: 12 },
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Pesto", fer: 1, we: 1 },
+    { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Confett.Fichi", fer:1, we: 1},
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Pistacchio", fer: 1, we: 1 },
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Noci", fer: 1, we: 1 },
     { cat: "SCAFFALERIA", color: "var(--cat-scaffaleria)", nome: "Semi Papavero", fer: 0.2, we: 0.2 },

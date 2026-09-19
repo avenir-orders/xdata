@@ -860,10 +860,7 @@ function generaOrdineMetro(dati) {
         let qParm = Math.ceil(5 - trovaGiacenza(lista, 'parmigiano 24m'));
         if (qParm > 0) ordineSede.push(`${qParm} Parmigiano`);
         
-        // 4. Stracciatella (Soglia totale 8)
-        let qStracc = Math.ceil(8 - trovaGiacenza(lista, 'stracciatella'));
-        if (qStracc > 0) ordineSede.push(`${qStracc} Stracciatella`);
-        
+      
         // 5. Speck (Soglia 2. Sopra 0.3 ordina 1, sotto ordina per arrivare a 2)
         let valSpeck = trovaGiacenza(lista, 'speck');
         let qSpeck = 0;

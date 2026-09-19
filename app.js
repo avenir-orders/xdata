@@ -980,50 +980,57 @@ window.onload = async function() {
     await syncCloud(); 
 };
 
-// === FUNZIONE DEDICATA AL RISVEGLIO DELL'APP ===
+// === GESTIONE RISVEGLIO E TIMER (ANTI-BOMBARDAMENTO) ===
+let timerRisveglio = null;
+
+function richiediRisveglio() {
+    clearTimeout(timerRisveglio); // Cancella tutte le "sveglie" sovrapposte e caotiche
+    timerRisveglio = setTimeout(risveglioApp, 1500); // Ne fa scattare una sola, pulita, dopo 1.5 secondi
+}
+
 function risveglioApp() {
-    const status = document.getElementById('sync-status');
-    if (status) {
-        status.innerText = '🔄 Aggiornamento dati al rientro...';
-        status.style.color = "#e67e22"; 
-    }
+    const p = document.getElementById('pizzeria').value;
     
-    // Disattiva istantaneamente lo scudo per forzare il download dei dati freschi
-    ultimoSalvataggio = 0; 
-    syncCloud();
+    // 1. C'è un salvataggio bloccato da spedire in automatico?
+    if (p && localStorage.getItem('pending_sync_' + p) === 'true') {
+        const status = document.getElementById('sync-status');
+        if (status) {
+            status.innerHTML = '🔄 Recupero connessione... Invio automatico!';
+            status.style.color = "#e67e22";
+        }
+        eseguiSalva(true);
+    } else {
+        // 2. Normale aggiornamento silenzioso
+        const status = document.getElementById('sync-status');
+        if (status) {
+            status.innerText = '🔄 Aggiornamento in background...';
+            status.style.color = "#e67e22"; 
+        }
+        ultimoSalvataggio = 0; 
+        syncCloud(null, true); 
+    }
 }
 
 // === CRONOMETRO BACKGROUND ===
-let orarioUscita = Date.now(); // Registra il momento in cui apri l'app
+let orarioUscita = Date.now(); 
 
-// GESTIONE USCITA E RIENTRO DALL'APP
 document.addEventListener("visibilitychange", function() {
     if (document.visibilityState === "hidden") {
         modificheNonSalvate = false; 
         if (document.activeElement) document.activeElement.blur(); 
-        
-        // Fai scattare il cronometro appena l'app va in background
         orarioUscita = Date.now(); 
-        
     } else if (document.visibilityState === "visible") {
-        // Calcola quanto tempo sei stata fuori (in millisecondi)
         let tempoFuori = Date.now() - orarioUscita;
-        
-        // 5 minuti equivalgono a 300.000 millisecondi (5 * 60 * 1000)
-        // Se sei stata via per PIÙ di 5 minuti, fa l'aggiornamento automatico
-        if (tempoFuori > 300000) {
-            setTimeout(risveglioApp, 2500);
+        if (tempoFuori > 300000) { // Se sei stata via per più di 5 minuti
+            richiediRisveglio(); // Usa il filtro anti-bombardamento
         }
-        // Se sei stata via per MENO di 5 minuti, l'app non fa assolutamente nulla e ti lascia lavorare
     }
 });
 
-// GESTIONE "SCONGELAMENTO" MEMORIA BROWSER
 window.addEventListener("pageshow", function(e) {
     if (e.persisted) {
         modificheNonSalvate = false;
-        // In caso di vero e proprio congelamento di sistema, forziamo l'aggiornamento per sicurezza
-        setTimeout(risveglioApp, 2500);
+        richiediRisveglio(); // Usa il filtro anti-bombardamento
     }
 });
 // ============================================================================

@@ -760,16 +760,20 @@ function cercaGiacenza(inventario, tipo) {
 }
 
 function calcolaFinestraConsegnaTonon(sede, dataRiferimento = new Date()) {
-    const giornoAttuale = dataRiferimento.getDay();
+    const giornoAttuale = dataRiferimento.getDay(); // 0=Domenica, 1=Lunedì... 6=Sabato
+    
+    // Regola di ferro: se premo il tasto tra Mercoledì (3) e Sabato (6) usa SEMPRE 
+    // i tetti alti per il weekend (CONSEGNA_2) per TUTTE le sedi.
+    const tipo = (giornoAttuale >= 3 && giornoAttuale <= 6) ? 'CONSEGNA_2' : 'CONSEGNA_1';
+    
     const giorniConsegna = CONSEGNE_TONON[sede];
-
-    // Cerca il primo giorno di consegna successivo a oggi
-    let indiceConsegna = giorniConsegna.findIndex(g => g > giornoAttuale);
-
-    // Se faccio l'ordine nel weekend e non trova giorni maggiori, riparte dalla prima consegna della settimana (indice 0)
-    if (indiceConsegna === -1) {
-        indiceConsegna = 0;
-    }
+    const indice = tipo === 'CONSEGNA_1' ? 0 : 1;
+    
+    return {
+        giornoConsegnaBreve: NOMI_GIORNI_BREVI[giorniConsegna[indice]],
+        tipoConsegna: tipo
+    };
+}
 
     return {
         giornoConsegnaBreve: NOMI_GIORNI_BREVI[giorniConsegna[indiceConsegna]],

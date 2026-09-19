@@ -775,11 +775,7 @@ function calcolaFinestraConsegnaTonon(sede, dataRiferimento = new Date()) {
     };
 }
 
-    return {
-        giornoConsegnaBreve: NOMI_GIORNI_BREVI[giorniConsegna[indiceConsegna]],
-        tipoConsegna: indiceConsegna === 0 ? 'CONSEGNA_1' : 'CONSEGNA_2'
-    };
-}
+  
 function calcolaOrdineSedeTonon(sedeKey, nomeDisplay) {
     const finestra = calcolaFinestraConsegnaTonon(sedeKey);
     const rawData = localStorage.getItem('inventario_dati_' + sedeKey);

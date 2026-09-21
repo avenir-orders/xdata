@@ -716,7 +716,7 @@ const FORMATO_SCATOLA = {
 const FABBISOGNO_TONON = {
     SILEA: {
         // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer (2 giorni)
-        CONSEGNA_1: { mozza: 36, bufala: 48, provola: 4 }, // <--- MODIFICA QUESTI NUMERI
+        CONSEGNA_1: { mozza: 36, bufala: 45, provola: 4 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Mercoledì -> Arriva Giovedì -> Copre Gio, Ven, Sab, Dom (4 giorni)
         CONSEGNA_2: { mozza: 84, bufala: 72, provola: 7 }
     },

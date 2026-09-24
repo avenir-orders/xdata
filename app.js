@@ -414,47 +414,41 @@ async function syncCloud(data = null) {
     if (!status) return;
     
     // === CONTROLLO ISTANTANEO DELLA RETE (IL RADAR) ===
-    // Se il dispositivo capisce di non avere linea, va offline in un millesimo di secondo
     if (!navigator.onLine) {
         status.innerHTML = '✅ MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Puoi compilare e salvare normalmente: i dati resteranno al sicuro sul dispositivo. Quando torna la rete, premi di nuovo SALVA per inviarli al Cloud)</span>'; 
         status.style.color = "#e67e22";
-        return; // Blocca la funzione qui, senza far partire nessun timer!
+        return; 
     }
     
     status.style.color = "#666666"; 
     
-    // === ANTI-BLOCCO: Abbassato a 20 secondi per non farti aspettare un'eternità ===
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000); 
 
     try {
         if (data) {
-
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(data),
-                signal: controller.signal // Collega il timer alla chiamata
+                signal: controller.signal
             });
             clearTimeout(timeoutId);
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
-           // === SCUDO ATTIVO: Se ho salvato da meno di 3 minuti, blocco il download ===
             if (Date.now() - ultimoSalvataggio < 180000) {
-                clearTimeout(timeoutId); // Spegne il timer per non farlo andare in errore
+                clearTimeout(timeoutId); 
                 status.innerText = '✅ Pronta (Dati locali)'; 
                 status.style.color = "#25D366";
                 return; 
             }
 
-           // === MOTORE "CODA SILENZIOSA" (Anti-Ingorgo Google) ===
             let res = null;
             let success = false;
             let tentativi = 0;
 
-            // Riprova fino a 3 volte se Google è occupato
             while (tentativi < 3 && !success) {
                 try {
                     res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { 
@@ -465,24 +459,20 @@ async function syncCloud(data = null) {
                         success = true;
                     } else {
                         tentativi++;
-                        // Se non è l'ultimo tentativo, aspetta 1.5 secondi prima di riprovare
                         if (tentativi < 3) await new Promise(r => setTimeout(r, 1500));
                     }
                 } catch (err) {
                     tentativi++;
-                    if (tentativi === 3) throw err; // Solo al terzo fallimento consecutivo lancia l'allarme
-                    await new Promise(r => setTimeout(r, 1500)); // Aspetta in silenzio e riprova
+                    if (tentativi === 3) throw err; 
+                    await new Promise(r => setTimeout(r, 1500)); 
                 }
             }
 
             clearTimeout(timeoutId);
             
-           if (success && res) {
+            if (success && res) {
                 const cloudData = await res.json();
                 
-                // === SCUDO ANTI-SOVRASCRITTURA (IL SALVAVITA) ===
-                // Se hai premuto SALVA mentre il telefono stava ancora scaricando, 
-                // cestiniamo i dati vecchi appena arrivati per proteggere i tuoi nuovi!
                 if (Date.now() - ultimoSalvataggio < 180000) {
                     console.log("Scudo attivo: blocco sovrascrittura in ritardo.");
                     return; 
@@ -497,45 +487,36 @@ async function syncCloud(data = null) {
                 }
             }
         }
- } catch (e) { 
+    } catch (e) { 
         clearTimeout(timeoutId);
         console.error("Errore Sync:", e);
         
-        const status = document.getElementById('sync-status');
         if(status) {
-            if (navigator.onLine) {
-                // Il telefono HA internet, ma Google ha fatto da "imbuto" perché siete in due
-                status.innerHTML = '🚦 Traffico sul Server (Accesso doppio)<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">Google sta gestendo un altro accesso. Puoi continuare a leggere o scrivere senza problemi, i dati sono salvati sul telefono!</span>'; 
-                status.style.color = "#e67e22"; 
-            } else {
-                // Manca DAVVERO la connessione internet (Wi-Fi staccato o no campo)
-                status.innerHTML = '✈️ MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Nessuna connessione. Puoi compilare e salvare: i dati restano al sicuro sul telefono. Quando torna la rete premi di nuovo SALVA).</span>'; 
-                status.style.color = "#e67e22"; 
-            }
+            // Rimosso il messaggio "Traffico sul Server (Accesso doppio)" e inserito un avviso più generico e utile
+            status.innerHTML = '⚠️ CONNESSIONE DEBOLE O IN RISVEGLIO<br><span style="font-size:12px; font-weight:normal;">Il telefono sta cercando la rete. Puoi continuare a scrivere, i dati sono salvi!</span><br><button onclick="syncSicuro()" style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:6px; margin-top:10px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">🔄 RIPROVA A CONNETTERTI</button>';
+            status.style.color = "#e67e22"; 
         }
+    } finally {
+        isSyncingBackground = false; // SBLOCCA IL LUCCHETTO QUI!
 
-} finally {
         if (typeof creaLista === 'function' && !data) {
             const menuAttivo = document.getElementById('pizzeria') ? document.getElementById('pizzeria').value : '';
             
-            // 1. Se sei nella vista TUTTE, la ricarica mantenendo il filtro Fornitore
             if (menuAttivo === 'TUTTE') {
                 const filtroFornitore = document.getElementById('filtro-fornitori') ? document.getElementById('filtro-fornitori').value : 'TUTTI';
                 generaVistaTutte(filtroFornitore);
             } 
-            // 2. Se sei in una lista singola (es. Casta), aggiorna in modo "fluido" solo i numeri, mantenendo la tua posizione di scorrimento!
             else if (menuAttivo !== 'ARCHIVIO' && menuAttivo !== 'FORNITORI' && menuAttivo !== '') {
                 const datiAggiornati = JSON.parse(localStorage.getItem('inventario_dati_' + menuAttivo)) || {};
                 
                 ingredienti.forEach((ing, i) => {
                     const input = document.getElementById(`sel-${i}`);
-                    // Aggiorna il numero solo se non stai letteralmente cliccando dentro quella precisa casella in questo istante
                     if (input && document.activeElement !== input) { 
                         const nuovoValore = datiAggiornati[ing.nome] || "";
                         if (input.value !== nuovoValore) {
-                            input.value = nuovoValore; // Inietta il nuovo dato
+                            input.value = nuovoValore; 
                             const soglia = isWeekendDomani ? ing.we : ing.fer;
-                            valuta(i, soglia); // Aggiorna i colori verde/rosso
+                            valuta(i, soglia); 
                         }
                     }
                 });
@@ -543,8 +524,6 @@ async function syncCloud(data = null) {
         }
     }
 }
-
-
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }
 function azzeraLista() { if(confirm("Cancellare dati?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }

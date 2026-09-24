@@ -370,6 +370,9 @@ document.addEventListener('change', (e) => {
     }
 });
 
+// === VARIABILE DEL POSTINO ===
+let datiInSospeso = null;
+
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
     const d = {};
@@ -383,11 +386,9 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
-    // 1. Salvataggio immediato in memoria per sicurezza estrema
+    // 1. Salvataggio immediato in memoria (Garantito sul telefono)
     localStorage.setItem('inventario_dati_' + p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
-    
-    // Attiva lo scudo temporale: segna l'istante esatto di questo salvataggio
     ultimoSalvataggio = Date.now(); 
     
     const payload = {
@@ -398,16 +399,44 @@ async function eseguiSalva(forza = false) {
     try {
         await syncCloud(payload);
         modificheNonSalvate = false; 
+        datiInSospeso = null; // Il postino si svuota: consegna riuscita al primo colpo!
         chiudiDialog(); 
-        alert("✅ Report salvato!");
+        alert("✅ Report salvato nel Cloud!");
     } catch (e) { 
         console.error("Errore salva:", e); 
         modificheNonSalvate = false; 
-        document.getElementById('sync-status').innerText = '✅ Salvato in locale';
+        
+        // IL POSTINO PRENDE IN CARICO IL PACCO DA SPEDIRE DOPO
+        datiInSospeso = payload; 
+        
+        document.getElementById('sync-status').innerHTML = '⚠️ Salvato solo sul telefono<br><span style="font-size: 12px; font-weight: normal; color: #e67e22;">Server Google occupato. Non preoccuparti: l\'app invierà i dati da sola in background appena si libera!</span>';
+        document.getElementById('sync-status').style.color = "#e67e22";
         chiudiDialog();
-        alert("⚠️ Rete o Server Google lenti: Dati salvati in sicurezza sul dispositivo!");
     }
 }
+
+// === MOTORE DEL POSTINO: Controlla ogni 30 secondi se ci sono pacchi bloccati ===
+setInterval(async () => {
+    if (datiInSospeso && navigator.onLine) {
+        const status = document.getElementById('sync-status');
+        if(status) {
+            status.innerHTML = '🔄 Ritentativo di invio in background...';
+            status.style.color = "#e67e22";
+        }
+        
+        try {
+            await syncCloud(datiInSospeso);
+            datiInSospeso = null; // Consegna riuscita!
+            if(status) {
+                status.innerHTML = '✅ Dati recuperati e inviati al Cloud!';
+                status.style.color = "#25D366";
+            }
+        } catch (e) {
+            // Se fallisce ancora, il postino riproverà dopo altri 30 secondi senza dire nulla
+            console.log("Postino: server ancora occupato, riproverò...");
+        }
+    }
+}, 30000); // 30.000 millisecondi = 30 secondi
 
 async function syncCloud(data = null) {
     const status = document.getElementById('sync-status');

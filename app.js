@@ -733,19 +733,19 @@ const FABBISOGNO_TONON = {
         // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer (2 giorni)
         CONSEGNA_1: { mozza: 36, bufala: 45, provola: 4 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Mercoledì -> Arriva Giovedì -> Copre Gio, Ven, Sab, Dom (4 giorni)
-        CONSEGNA_2: { mozza: 84, bufala: 72, provola: 7 }
+        CONSEGNA_2: { mozza: 78, bufala: 72, provola: 9 }
     },
     CASTA: {
         // Ordine Domenica -> Arriva Lunedì -> Copre Lun, Mar, Mer, Gio (4 giorni)
         CONSEGNA_1: { mozza: 50, bufala: 72, provola: 10 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Giovedì -> Arriva Venerdì -> Copre Ven, Sab, Dom (3 giorni)
-        CONSEGNA_2: { mozza: 84, bufala: 72, provola: 10 }
+        CONSEGNA_2: { mozza: 96, bufala: 72, provola: 10 }
     },
     BIBAN: {
         // Ordine Domenica -> Arriva Martedì -> Copre Mar, Mer, Gio (3 giorni)
         CONSEGNA_1: { mozza: 50, bufala: 48, provola: 8 }, // <--- MODIFICA QUESTI NUMERI
         // Ordine Giovedì -> Arriva Venerdì -> Copre Ven, Sab, Dom, Lun (4 giorni)
-        CONSEGNA_2: { mozza: 90, bufala: 72, provola: 10 }
+        CONSEGNA_2: { mozza: 96, bufala: 72, provola: 13 }
     }
 };
 

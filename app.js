@@ -358,6 +358,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKYWNbfIyXW_lRfaT-L
 
 let modificheNonSalvate = false;
 let ultimoSalvataggio = 0; // === SCUDO TEMPORALE ===
+let isSyncingBackground = false;
 
 document.addEventListener('input', (e) => {
     if (e.target && e.target.tagName === 'INPUT') {
@@ -439,6 +440,9 @@ setInterval(async () => {
 }, 30000); // 30.000 millisecondi = 30 secondi
 
 async function syncCloud(data = null) {
+    // === CHIUSURA LUCCHETTO: Se sta già scaricando, ignora chiamate sovrapposte ===
+    if (!data && isSyncingBackground) return;
+    
     const status = document.getElementById('sync-status');
     if (!status) return;
     
@@ -449,11 +453,14 @@ async function syncCloud(data = null) {
         return; 
     }
     
+    // Attiva il lucchetto solo se stiamo scaricando (non bloccando i salvataggi)
+    if (!data) isSyncingBackground = true;
+    
     status.style.color = "#666666"; 
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000); 
-
+    
     try {
         if (data) {
             await fetch(SCRIPT_URL, {
@@ -522,7 +529,7 @@ async function syncCloud(data = null) {
         
         if(status) {
             // Rimosso il messaggio "Traffico sul Server (Accesso doppio)" e inserito un avviso più generico e utile
-            status.innerHTML = '⚠️ CONNESSIONE DEBOLE O IN RISVEGLIO<br><span style="font-size:12px; font-weight:normal;">Il telefono sta cercando la rete. Puoi continuare a scrivere, i dati sono salvi!</span><br><button onclick="syncSicuro()" style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:6px; margin-top:10px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">🔄 RIPROVA A CONNETTERTI</button>';
+            status.innerHTML = '⚠️ CONNESSIONE DEBOLE O IN RISVEGLIO<br><span style="font-size:12px; font-weight:normal;">Il telefono sta cercando la rete. Puoi continuare a scrivere, i dati sono salvi!</span><br><button onclick="syncCloud()" style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:6px; margin-top:10px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">🔄 RIPROVA A CONNETTERTI</button>';
             status.style.color = "#e67e22"; 
         }
     } finally {
@@ -994,16 +1001,14 @@ function richiediRisveglio() {
 }
 
 function risveglioApp() {
-    const p = document.getElementById('pizzeria').value;
-    
-    // 1. C'è un salvataggio bloccato da spedire in automatico?
-    if (p && localStorage.getItem('pending_sync_' + p) === 'true') {
+    // 1. Il Postino ha un pacco bloccato da spedire in automatico?
+    if (datiInSospeso) {
         const status = document.getElementById('sync-status');
         if (status) {
             status.innerHTML = '🔄 Recupero connessione... Invio automatico!';
             status.style.color = "#e67e22";
         }
-        eseguiSalva(true);
+        syncCloud(datiInSospeso); // Lancia direttamente i dati rimasti in sospeso
     } else {
         // 2. Normale aggiornamento silenzioso
         const status = document.getElementById('sync-status');
@@ -1012,10 +1017,9 @@ function risveglioApp() {
             status.style.color = "#e67e22"; 
         }
         ultimoSalvataggio = 0; 
-        syncCloud(null, true); 
+        syncCloud(); 
     }
 }
-
 // === CRONOMETRO BACKGROUND ===
 let orarioUscita = Date.now(); 
 
@@ -1027,7 +1031,7 @@ document.addEventListener("visibilitychange", function() {
     } else if (document.visibilityState === "visible") {
         let tempoFuori = Date.now() - orarioUscita;
         if (tempoFuori > 300000) { // Se sei stata via per più di 5 minuti
-            richiediRisveglio(); // Usa il filtro anti-bombardamento
+            richiediRisveglio(); 
         }
     }
 });
@@ -1035,12 +1039,10 @@ document.addEventListener("visibilitychange", function() {
 window.addEventListener("pageshow", function(e) {
     if (e.persisted) {
         modificheNonSalvate = false;
-        richiediRisveglio(); // Usa il filtro anti-bombardamento
+        richiediRisveglio(); 
     }
 });
-// ============================================================================
-// SISTEMA DI ANTEPRIMA ORDINI E MESSAGGI
-// ============================================================================
+
 function mostraAnteprimaOrdine(testo) {
     let modal = document.getElementById('modal-anteprima');
     

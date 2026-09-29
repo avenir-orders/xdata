@@ -458,29 +458,21 @@ setInterval(async () => {
 }, 30000);
 
 
-
-
 async function syncCloud(data = null) {
-    // === CHIUSURA LUCCHETTO: Se sta già scaricando, ignora chiamate sovrapposte ===
     if (!data && isSyncingBackground) return;
     
     const status = document.getElementById('sync-status');
     if (!status) return;
     
-    // === CONTROLLO ISTANTANEO DELLA RETE (IL RADAR) ===
     if (!navigator.onLine) {
-        status.innerHTML = '✅ MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Puoi compilare e salvare normalmente: i dati resteranno al sicuro sul dispositivo. Quando torna la rete, premi di nuovo SALVA per inviarli al Cloud)</span>'; 
+        status.innerHTML = '✅ MODALITÀ OFFLINE<br><span style="font-size: 12px; font-weight: normal; color: #e67e22; margin-top: 6px; display: block; line-height: 1.3; text-transform: none;">(Puoi compilare e salvare normalmente: i dati resteranno al sicuro sul dispositivo.)</span>'; 
         status.style.color = "#e67e22";
         return; 
     }
     
-    // Attiva il lucchetto solo se stiamo scaricando (non bloccando i salvataggi)
     if (!data) isSyncingBackground = true;
-    
     status.style.color = "#666666"; 
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); 
+    status.innerText = '🔄 Connessione al Cloud in corso...';
     
     try {
         if (data) {
@@ -488,87 +480,81 @@ async function syncCloud(data = null) {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(data),
-                signal: controller.signal
+                body: JSON.stringify(data)
             });
-            clearTimeout(timeoutId);
             status.innerText = 'Sincronizzazione completata';
             status.style.color = "#25D366"; 
         } else {
             if (Date.now() - ultimoSalvataggio < 180000) {
-                clearTimeout(timeoutId); 
                 status.innerText = '✅ Pronta (Dati locali)'; 
                 status.style.color = "#25D366";
                 return; 
             }
 
+            // Aumentiamo il timeout a 35 secondi e usiamo un sistema di tentativi più pulito
             let res = null;
             let success = false;
             let tentativi = 0;
 
             while (tentativi < 3 && !success) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 35000); // 35 secondi di respiro per Google
+
                 try {
                     res = await fetch(`${SCRIPT_URL}?nocache=${new Date().getTime()}`, { 
                         redirect: 'follow',
                         signal: controller.signal
                     });
-                    if (res.ok) {
+                    clearTimeout(timeoutId);
+                    
+                    if (res && res.ok) {
                         success = true;
                     } else {
                         tentativi++;
-                        if (tentativi < 3) await new Promise(r => setTimeout(r, 1500));
+                        if (tentativi < 3) await new Promise(r => setTimeout(r, 1000));
                     }
                 } catch (err) {
+                    clearTimeout(timeoutId);
                     tentativi++;
-                    if (tentativi === 3) throw err; 
-                    await new Promise(r => setTimeout(r, 1500)); 
+                    if (tentativi >= 3) throw err;
+                    await new Promise(r => setTimeout(r, 1000)); 
                 }
             }
-
-            clearTimeout(timeoutId);
             
             if (success && res) {
                 const cloudData = await res.json();
                 
                 if (Date.now() - ultimoSalvataggio < 180000) {
-                    console.log("Scudo attivo: blocco sovrascrittura in ritardo.");
                     return; 
                 }
 
-         if (cloudData && typeof cloudData === 'object') { 
+                if (cloudData && typeof cloudData === 'object') { 
                     Object.keys(cloudData).forEach(key => {
-                        // === SCUDO ANTI-SCHIACCIAMENTO A PROIETTILE ===
                         if (key.startsWith('ultimo_timestamp_')) {
                             const pKey = key.replace('ultimo_timestamp_', '');
                             const timestampLocale = Number(localStorage.getItem(`ultimo_timestamp_${pKey}`)) || 0;
                             const timestampCloud = Number(cloudData[key]) || 0;
                             
-                            // Se il Cloud tenta di mandarci dati più vecchi del telefono, li blocca!
                             if (timestampCloud < timestampLocale) {
-                                console.warn(`Bloccato tentativo di sovrascrittura vecchia per ${pKey}! Il telefono è più recente del Cloud.`);
                                 return; 
                             }
                         }
-
                         if(cloudData[key]) localStorage.setItem(key, cloudData[key]);
                     }); 
                     status.innerText = '✅ Dati caricati'; 
                     status.style.color = "#25D366";
                 }
-          }
-     }
-            
+            }
+        }         
     } catch (e) { 
-        clearTimeout(timeoutId);
         console.error("Errore Sync:", e);
         
         if(status) {
-            // Rimosso il messaggio "Traffico sul Server (Accesso doppio)" e inserito un avviso più generico e utile
-            status.innerHTML = '⚠️ CONNESSIONE DEBOLE O IN RISVEGLIO<br><span style="font-size:12px; font-weight:normal;">Il telefono sta cercando la rete. Puoi continuare a scrivere, i dati sono salvi!</span><br><button onclick="syncCloud()" style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:6px; margin-top:10px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">🔄 RIPROVA A CONNETTERTI</button>';
+            status.innerHTML = '⚠️ IL SERVER STA RISPONDENDO LENTAMENTE<br><span style="font-size:12px; font-weight:normal;">I dati sul telefono sono comunque salvi.</span><br><button onclick="syncCloud()" style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:6px; margin-top:10px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">🔄 RIPROVA SUBITO</button>';
             status.style.color = "#e67e22"; 
         }
     } finally {
-        isSyncingBackground = false; // SBLOCCA IL LUCCHETTO QUI!
+        isSyncingBackground = false;
 
         if (typeof creaLista === 'function' && !data) {
             const menuAttivo = document.getElementById('pizzeria') ? document.getElementById('pizzeria').value : '';
@@ -595,6 +581,8 @@ async function syncCloud(data = null) {
         }
     }
 }
+
+
 function cambiaPizzeria() { localStorage.setItem('ultima_pizzeria', document.getElementById('pizzeria').value); creaLista(); }
 function valuta(i, s) { const input = document.getElementById(`sel-${i}`); if(!input) return; const v = estraiNumeroIntelligente(input.value); document.getElementById(`box-${i}`).className = `item ${isNaN(v) ? 'vuoto' : (v < s ? 'urgente' : 'ok')} ing-item`; }
 function azzeraLista() { if(confirm("Cancellare dati?")) { localStorage.removeItem('inventario_dati_'+document.getElementById('pizzeria').value); creaLista(); } }

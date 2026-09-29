@@ -373,6 +373,7 @@ document.addEventListener('change', (e) => {
 
 // === VARIABILE DEL POSTINO ===
 let datiInSospeso = null;
+let orarioPaccoInSospeso = 0;
 
 async function eseguiSalva(forza = false) {
     const p = document.getElementById('pizzeria').value;
@@ -409,6 +410,7 @@ async function eseguiSalva(forza = false) {
         
         // IL POSTINO PRENDE IN CARICO IL PACCO DA SPEDIRE DOPO
         datiInSospeso = payload; 
+        orarioPaccoInSospeso = Date.now();
         
         document.getElementById('sync-status').innerHTML = '⚠️ Salvato solo sul telefono<br><span style="font-size: 12px; font-weight: normal; color: #e67e22;">Server Google occupato. Non preoccuparti: l\'app invierà i dati da sola in background appena si libera!</span>';
         document.getElementById('sync-status').style.color = "#e67e22";
@@ -417,7 +419,14 @@ async function eseguiSalva(forza = false) {
 }
 
 // === MOTORE DEL POSTINO: Controlla ogni 30 secondi se ci sono pacchi bloccati ===
+// === MOTORE DEL POSTINO: Controlla ogni 30 secondi se ci sono pacchi bloccati ===
 setInterval(async () => {
+    // Se c'è un pacco ma è più vecchio di 2 ore, cestinalo per evitare disastri!
+    if (datiInSospeso && (Date.now() - orarioPaccoInSospeso > 7200000)) {
+        datiInSospeso = null;
+        return;
+    }
+
     if (datiInSospeso && navigator.onLine) {
         const status = document.getElementById('sync-status');
         if(status) {
@@ -433,11 +442,12 @@ setInterval(async () => {
                 status.style.color = "#25D366";
             }
         } catch (e) {
-            // Se fallisce ancora, il postino riproverà dopo altri 30 secondi senza dire nulla
-            console.log("Postino: server ancora occupato, riproverò...");
+            console.log("Postino: server occupato, riproverò...");
         }
     }
-}, 30000); // 30.000 millisecondi = 30 secondi
+}, 30000);
+
+
 
 async function syncCloud(data = null) {
     // === CHIUSURA LUCCHETTO: Se sta già scaricando, ignora chiamate sovrapposte ===
@@ -1001,16 +1011,21 @@ function richiediRisveglio() {
 }
 
 function risveglioApp() {
-    // 1. Il Postino ha un pacco bloccato da spedire in automatico?
+    // Controllo scadenza: se in background il pacco è invecchiato più di 2 ore, buttalo
+    if (datiInSospeso && (Date.now() - orarioPaccoInSospeso > 7200000)) {
+        datiInSospeso = null;
+    }
+
+    // 1. Il Postino ha un pacco valido da spedire in automatico?
     if (datiInSospeso) {
         const status = document.getElementById('sync-status');
         if (status) {
             status.innerHTML = '🔄 Recupero connessione... Invio automatico!';
             status.style.color = "#e67e22";
         }
-        syncCloud(datiInSospeso); // Lancia direttamente i dati rimasti in sospeso
+        syncCloud(datiInSospeso); 
     } else {
-        // 2. Normale aggiornamento silenzioso
+        // 2. Normale aggiornamento silenzioso dal Cloud
         const status = document.getElementById('sync-status');
         if (status) {
             status.innerText = '🔄 Aggiornamento in background...';

@@ -388,37 +388,46 @@ async function eseguiSalva(forza = false) {
     const newDataString = JSON.stringify(d);
     document.getElementById('sync-status').innerText = 'Sincronizzazione in corso...';
     
-    // 1. Salvataggio immediato in memoria (Garantito sul telefono)
+    const oraSalvataggioEsatta = Date.now();
+    
+    // 1. SALVATAGGIO PERMANENTE NEL TELEFONO (Non si cancella neanche se chiudi il browser)
     localStorage.setItem('inventario_dati_' + p, newDataString);
     localStorage.setItem(`inventario_dati_${p}_${oggiStr}`, newDataString);
-    ultimoSalvataggio = Date.now(); 
+    localStorage.setItem(`ultimo_timestamp_${p}`, oraSalvataggioEsatta);
+    
+    // Segnamo che ci sono dati locali non ancora confermati dal Cloud
+    localStorage.setItem(`da_sincronizzare_${p}`, "true");
+    
+    ultimoSalvataggio = oraSalvataggioEsatta; 
     
     const payload = {
         ['inventario_dati_' + p]: newDataString,
-        [`inventario_dati_${p}_${oggiStr}`]: newDataString
+        [`inventario_dati_${p}_${oggiStr}`]: newDataString,
+        [`ultimo_timestamp_${p}`]: oraSalvataggioEsatta
     };
     
     try {
         await syncCloud(payload);
         modificheNonSalvate = false; 
-        datiInSospeso = null; // Il postino si svuota: consegna riuscita al primo colpo!
+        localStorage.removeItem(`da_sincronizzare_${p}`); // Sincronizzazione riuscita!
         chiudiDialog(); 
-        alert("✅ Report salvato nel Cloud!");
-    } catch (e) { 
-        console.error("Errore salva:", e); 
+        alert("✅ Report salvato e sincronizzato con il Cloud!");
+  } catch (e) { 
+        console.error("Errore salva offline:", e); 
         modificheNonSalvate = false; 
         
-        // IL POSTINO PRENDE IN CARICO IL PACCO DA SPEDIRE DOPO
-        datiInSospeso = payload; 
-        orarioPaccoInSospeso = Date.now();
+        // --- AGGIUNGI O SOSTITUISCI SOLO QUESTE DUE RIGHE QUI ---
+        datiInSospeso = payload;
+        orarioPaccoInSospeso = oraSalvataggioEsatta;
+        // --------------------------------------------------------
         
-        document.getElementById('sync-status').innerHTML = '⚠️ Salvato solo sul telefono<br><span style="font-size: 12px; font-weight: normal; color: #e67e22;">Server Google occupato. Non preoccuparti: l\'app invierà i dati da sola in background appena si libera!</span>';
+        document.getElementById('sync-status').innerHTML = '⚠️ Salvato offline sul telefono<br><span style="font-size: 12px; font-weight: normal; color: #e67e22;">Appena torna la rete, si sincronizzerà da solo!</span>';
         document.getElementById('sync-status').style.color = "#e67e22";
         chiudiDialog();
     }
 }
 
-// === MOTORE DEL POSTINO: Controlla ogni 30 secondi se ci sono pacchi bloccati ===
+
 // === MOTORE DEL POSTINO: Controlla ogni 30 secondi se ci sono pacchi bloccati ===
 setInterval(async () => {
     // Se c'è un pacco ma è più vecchio di 2 ore, cestinalo per evitare disastri!
@@ -427,7 +436,8 @@ setInterval(async () => {
         return;
     }
 
-    if (datiInSospeso && navigator.onLine) {
+    // Aggiunto il controllo && typeof datiInSospeso === 'object' per sicurezza
+    if (datiInSospeso && typeof datiInSospeso === 'object' && navigator.onLine) {
         const status = document.getElementById('sync-status');
         if(status) {
             status.innerHTML = '🔄 Ritentativo di invio in background...';
@@ -446,6 +456,7 @@ setInterval(async () => {
         }
     }
 }, 30000);
+
 
 
 
@@ -524,15 +535,29 @@ async function syncCloud(data = null) {
                     return; 
                 }
 
-                if (cloudData && typeof cloudData === 'object') { 
+         if (cloudData && typeof cloudData === 'object') { 
                     Object.keys(cloudData).forEach(key => {
+                        // === SCUDO ANTI-SCHIACCIAMENTO A PROIETTILE ===
+                        if (key.startsWith('ultimo_timestamp_')) {
+                            const pKey = key.replace('ultimo_timestamp_', '');
+                            const timestampLocale = Number(localStorage.getItem(`ultimo_timestamp_${pKey}`)) || 0;
+                            const timestampCloud = Number(cloudData[key]) || 0;
+                            
+                            // Se il Cloud tenta di mandarci dati più vecchi del telefono, li blocca!
+                            if (timestampCloud < timestampLocale) {
+                                console.warn(`Bloccato tentativo di sovrascrittura vecchia per ${pKey}! Il telefono è più recente del Cloud.`);
+                                return; 
+                            }
+                        }
+
                         if(cloudData[key]) localStorage.setItem(key, cloudData[key]);
                     }); 
                     status.innerText = '✅ Dati caricati'; 
                     status.style.color = "#25D366";
                 }
-            }
-        }
+          }
+     }
+            
     } catch (e) { 
         clearTimeout(timeoutId);
         console.error("Errore Sync:", e);
@@ -1091,3 +1116,35 @@ function confermaInvioWhatsApp() {
     document.getElementById('overlay').style.display = 'none';
     window.location.href = "whatsapp://send?text=" + encodeURIComponent(testoFinale);
 }
+
+// === SINCRONIZZAZIONE AUTOMATICA TIPO "SITO WEB" ===
+window.addEventListener('online', async () => {
+    console.log("Connessione tornata! Controllo dati in sospeso...");
+    const p = document.getElementById('pizzeria').value;
+    if (!p || p === "TUTTE" || p === "ARCHIVIO" || p === "FORNITORI") return;
+
+    // Se c'è un salvataggio fatto offline per questa pizzeria, rispediscilo
+    if (localStorage.getItem(`da_sincronizzare_${p}`) === "true") {
+        const dStr = localStorage.getItem('inventario_dati_' + p);
+        const oggiStr = new Date().toISOString().split('T')[0];
+        const timestamp = Number(localStorage.getItem(`ultimo_timestamp_${p}`)) || Date.now();
+
+        const payload = {
+            ['inventario_dati_' + p]: dStr,
+            [`inventario_dati_${p}_${oggiStr}`]: dStr,
+            [`ultimo_timestamp_${p}`]: timestamp
+        };
+
+        try {
+            await syncCloud(payload);
+            localStorage.removeItem(`da_sincronizzare_${p}`);
+            const status = document.getElementById('sync-status');
+            if (status) {
+                status.innerText = '✅ Sincronizzato automaticamente!';
+                status.style.color = "#25D366";
+            }
+        } catch (err) {
+            console.log("Tentativo di invio automatico fallito, riproverà dopo.");
+        }
+    }
+});

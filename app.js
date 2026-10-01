@@ -905,14 +905,14 @@ function generaOrdineMetro(dati) {
                 qSpeck = Math.ceil(2 - valSpeck);
             }
         }
-        if (qSpeck > 0) ordineSede.push(`${qSpeck} Speck`);
+        if (qSpeck > 0) ordineSede.push(`${qSpeck} Speck Alto Adige IGP`);
 
         // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
         if (trovaGiacenza(lista, 'mortadella') < 1) ordineSede.push(`1 Mortadella`);
 
         // 7. Crudo (Soglia 1.5. Arrotondato per eccesso)
         let qCrudo = Math.ceil(1.5 - trovaGiacenza(lista, 'crudo'));
-        if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo`);
+        if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo Parma 24 mesi`);
 
         // 8. Datterino Rosso (Soglie: Casta 5, Silea 2, Biban 4)
         let sogliaDattRosso = (sede === 'Casta') ? 5 : (sede === 'Silea' ? 2 : 4);

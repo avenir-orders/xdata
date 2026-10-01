@@ -859,7 +859,7 @@ function inviaOrdineTonon() {
 function generaOrdineMetro(dati) {
     let testoOrdine = "";
     const sedi = ['Biban', 'Casta', 'Silea'];
-    
+
     // === NUOVO MOTORE DI RICERCA INTELLIGENTE ===
     // Ignora maiuscole/minuscole. Se matchEsatto è true, cerca la parola precisa.
     const trovaGiacenza = (listaLocale, nomeCercato, matchEsatto = false) => {
@@ -868,7 +868,7 @@ function generaOrdineMetro(dati) {
         for (let key in listaLocale) {
             const keyCorrente = key.toLowerCase().trim();
             let trovato = matchEsatto ? (keyCorrente === ricerca) : keyCorrente.includes(ricerca);
-            
+
             if (trovato) {
                 const v = estraiNumeroIntelligente(listaLocale[key]);
                 return isNaN(v) ? 0 : v;
@@ -877,28 +877,24 @@ function generaOrdineMetro(dati) {
         return 0; // se non trova nulla
     };
 
-    // Preparo la lettura del magazzino di Casta per la regola speciale delle patate
-    const listaCasta = dati['CASTA'] || {};
-    
     sedi.forEach(sede => {
         let sedeKey = sede.toUpperCase(); // Es: 'BIBAN'
         let lista = dati[sedeKey] || {};
-        
+
         let ordineSede = [];
-        
-        // 1. Ricotta (Soglia totale 10)
-        let qRicotta = Math.ceil(10 - trovaGiacenza(lista, 'ricotta'));
+
+        // 1. Ricotta (Soglia totale 8) - MODIFICATO
+        let qRicotta = Math.ceil(8 - trovaGiacenza(lista, 'ricotta'));
         if (qRicotta > 0) ordineSede.push(`${qRicotta} Ricotta`);
-        
+
         // 2. No Lattosio (Soglia totale 15, buste da 3)
         let qNoLatt = Math.ceil((15 - trovaGiacenza(lista, 'lattosio')) / 3);
         if (qNoLatt > 0) ordineSede.push(`${qNoLatt} NoLatt`);
-        
-        // 3. Parmigiano 24m (Cerca ESATTAMENTE "parmigiano 24m" come hai chiesto)
-        let qParm = Math.ceil(5 - trovaGiacenza(lista, 'parmigiano 24m'));
+
+        // 3. Parmigiano 24m (Cerca ESATTAMENTE "parmigiano 24m") - MODIFICATO (soglia 3)
+        let qParm = Math.ceil(3 - trovaGiacenza(lista, 'parmigiano 24m'));
         if (qParm > 0) ordineSede.push(`${qParm} Parmigiano`);
-        
-      
+
         // 5. Speck (Soglia 2. Sopra 0.3 ordina 1, sotto ordina per arrivare a 2)
         let valSpeck = trovaGiacenza(lista, 'speck');
         let qSpeck = 0;
@@ -910,24 +906,26 @@ function generaOrdineMetro(dati) {
             }
         }
         if (qSpeck > 0) ordineSede.push(`${qSpeck} Speck`);
-        
+
         // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
         if (trovaGiacenza(lista, 'mortadella') < 1) ordineSede.push(`1 Mortadella`);
-        
+
         // 7. Crudo (Soglia 1.5. Arrotondato per eccesso)
         let qCrudo = Math.ceil(1.5 - trovaGiacenza(lista, 'crudo'));
         if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo`);
-        
+
         // 8. Datterino Rosso (Soglie: Casta 5, Silea 2, Biban 4)
         let sogliaDattRosso = (sede === 'Casta') ? 5 : (sede === 'Silea' ? 2 : 4);
         let giacDattRosso = trovaGiacenza(lista, 'rosso') || trovaGiacenza(lista, 'cass. datterino');
         let qDattRosso = Math.ceil(sogliaDattRosso - giacDattRosso);
         if (qDattRosso > 0) ordineSede.push(`${qDattRosso} Datt. rosso`);
-        
-        // 9. Datterino Giallo (Soglia 6 vaschette, che formano 1 cassa)
-        if (trovaGiacenza(lista, 'giallo') < 6) ordineSede.push(`1 Datt. Giallo o Arancione`);
-        
-        // 10. Noci (Soglia totale 3 per tutti - Ora trova in automatico anche "Noci" maiuscolo)
+
+        // 9. Datterino Giallo (Soglia 6 vaschette, che formano 1 cassa) - MODIFICATO (Non ordina per Silea)
+        if (sede !== 'Silea') {
+            if (trovaGiacenza(lista, 'giallo') < 6) ordineSede.push(`1 Datt. Giallo o Arancione`);
+        }
+
+        // 10. Noci (Soglia totale 3 per tutti)
         let qNoci = Math.ceil(3 - trovaGiacenza(lista, 'noci'));
         if (qNoci > 0) ordineSede.push(`${qNoci} Noci`);
 
@@ -954,21 +952,23 @@ function generaOrdineMetro(dati) {
 
         // === REGOLE ESCLUSIVE PER BIBAN ===
         if (sede === 'Biban') {
-            // Sale (Soglia totale 3, ordinato SOLO a Biban)
-            // Il 'true' finale impone all'app di cercare ESATTAMENTE la parola "sale" (ignorando maiuscole/minuscole) e non parole simili.
+            // Sale (Soglia totale 2, ordinato SOLO a Biban) - MODIFICATO (soglia 2)
             let giacenzaSale = trovaGiacenza(lista, 'sale', true);
-            let qSale = Math.ceil(3 - giacenzaSale);
+            let qSale = Math.ceil(2 - giacenzaSale);
             if (qSale > 0) ordineSede.push(`${qSale} sale (10kg)`);
+        }
 
-            // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5.
-            let qPatateFritte = Math.ceil((25 - trovaGiacenza(listaCasta, 'patate fritte')) / 5);
+        // === REGOLE ESCLUSIVE PER CASTA ===
+        if (sede === 'Casta') {
+            // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5. - SPOSTATO A CASTA
+            let qPatateFritte = Math.ceil((25 - trovaGiacenza(lista, 'patate fritte')) / 5);
             if (qPatateFritte > 0) ordineSede.push(`${qPatateFritte} scatole Patate fritte`);
             
-            // Patate al forno: soglia 25 sacchetti. Arrivano in scatole da 5.
-            let qPatateForno = Math.ceil((25 - trovaGiacenza(listaCasta, 'patate al forno')) / 5);
+            // Patate al forno: soglia 25 sacchetti. Arrivano in scatole da 5. - SPOSTATO A CASTA
+            let qPatateForno = Math.ceil((25 - trovaGiacenza(lista, 'patate al forno')) / 5);
             if (qPatateForno > 0) ordineSede.push(`${qPatateForno} scatole Patate al forno`);
         }
-        
+
         // Costruzione finale del testo per la sede attuale
         if (ordineSede.length > 0) {
             testoOrdine += `${sede}\n`;
@@ -982,12 +982,13 @@ function generaOrdineMetro(dati) {
     return testoOrdine.trim();
 }
 
+
 function inviaOrdineMetro() {
     // Legge i dati REALI salvati nella memoria del dispositivo per le 3 sedi
     let tuttiIDati = {
-        'BIBAN': JSON.parse(localStorage.getItem('inventario_dati_BIBAN')) || {},
         'CASTA': JSON.parse(localStorage.getItem('inventario_dati_CASTA')) || {},
         'SILEA': JSON.parse(localStorage.getItem('inventario_dati_SILEA')) || {}
+        'BIBAN': JSON.parse(localStorage.getItem('inventario_dati_BIBAN')) || {},
     };
 
     // Richiama la grande funzione matematica che abbiamo creato prima

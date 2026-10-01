@@ -15,6 +15,7 @@ const ingredienti = [
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Funghi", fer: 1, we: 2 },
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Forno", fer: 1, we: 1 },
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Fritte", fer: 1, we: 2 },
+    { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Zucca",  fer: 1, we: 2 },
     { cat: "VASCHETTE", color: "var(--cat-vaschette)", nome: "Salsa", fer: 1, we: 2 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Mozzarella in kg", fer: 15, we: 30 },
     { cat: "FORMAGGI", color: "var(--cat-formaggi)", nome: "Bufala (numero)", fer: 12, we: 24 },

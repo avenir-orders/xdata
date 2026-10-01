@@ -893,7 +893,7 @@ function generaOrdineMetro(dati) {
 
         // 3. Parmigiano 24m (Cerca ESATTAMENTE "parmigiano 24m") - MODIFICATO (soglia 3)
         let qParm = Math.ceil(3 - trovaGiacenza(lista, 'parmigiano 24m'));
-        if (qParm > 0) ordineSede.push(`${qParm} Parmigiano`);
+        if (qParm > 0) ordineSede.push(`${qParm} Parmigiano 24 mesi`);
 
         // 5. Speck (Soglia 2. Sopra 0.3 ordina 1, sotto ordina per arrivare a 2)
         let valSpeck = trovaGiacenza(lista, 'speck');
@@ -908,7 +908,7 @@ function generaOrdineMetro(dati) {
         if (qSpeck > 0) ordineSede.push(`${qSpeck} Speck Alto Adige IGP`);
 
         // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
-        if (trovaGiacenza(lista, 'mortadella') < 1) ordineSede.push(`1 Mortadella`);
+        if (trovaGiacenza(lista, 'mortadella') < 1) ordineSede.push(`1 Mortadella suino nero`);
 
         // 7. Crudo (Soglia 1.5. Arrotondato per eccesso)
         let qCrudo = Math.ceil(1.5 - trovaGiacenza(lista, 'crudo'));
@@ -926,8 +926,8 @@ function generaOrdineMetro(dati) {
         }
 
         // 10. Noci (Soglia totale 3 per tutti)
-        let qNoci = Math.ceil(3 - trovaGiacenza(lista, 'noci'));
-        if (qNoci > 0) ordineSede.push(`${qNoci} Noci`);
+        let qNoci = Math.ceil(3 - trovaGiacenza(lista, 'Noci'));
+        if (qNoci > 0) ordineSede.push(`${qNoci} Noci (1/4)`);
 
         // 11. Pellicola (Soglia: Casta/Biban 6, Silea 2)
         let sogliaPellicola = (sede === 'Silea') ? 2 : 6;
@@ -962,11 +962,11 @@ function generaOrdineMetro(dati) {
         if (sede === 'Casta') {
             // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5. - SPOSTATO A CASTA
             let qPatateFritte = Math.ceil((25 - trovaGiacenza(lista, 'patate fritte')) / 5);
-            if (qPatateFritte > 0) ordineSede.push(`${qPatateFritte} scatole Patate fritte`);
+            if (qPatateFritte > 0) ordineSede.push(`${qPatateFritte} scatole Fry'N Dip`);
             
             // Patate al forno: soglia 25 sacchetti. Arrivano in scatole da 5. - SPOSTATO A CASTA
             let qPatateForno = Math.ceil((25 - trovaGiacenza(lista, 'patate al forno')) / 5);
-            if (qPatateForno > 0) ordineSede.push(`${qPatateForno} scatole Patate al forno`);
+            if (qPatateForno > 0) ordineSede.push(`${qPatateForno} scatole Country Potato Wedges`);
         }
 
         // Costruzione finale del testo per la sede attuale

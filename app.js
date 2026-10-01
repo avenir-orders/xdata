@@ -987,8 +987,8 @@ function inviaOrdineMetro() {
     // Legge i dati REALI salvati nella memoria del dispositivo per le 3 sedi
     let tuttiIDati = {
         'CASTA': JSON.parse(localStorage.getItem('inventario_dati_CASTA')) || {},
-        'SILEA': JSON.parse(localStorage.getItem('inventario_dati_SILEA')) || {}
-        'BIBAN': JSON.parse(localStorage.getItem('inventario_dati_BIBAN')) || {},
+        'SILEA': JSON.parse(localStorage.getItem('inventario_dati_SILEA')) || {},
+        'BIBAN': JSON.parse(localStorage.getItem('inventario_dati_BIBAN')) || {}
     };
 
     // Richiama la grande funzione matematica che abbiamo creato prima

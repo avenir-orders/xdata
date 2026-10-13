@@ -707,7 +707,7 @@ function inviaOrdineBarbazza() {
            // Regola speciale: Olive (Secchi da 5 buste)
             // Se scendono a 4 buste o meno, ordina in automatico 1 secchio. 
             // (Se scendono a 0, ordinerà comunque 1 secchio. Se ne vuoi 2 quando sei a zero, fammelo sapere!)
-            let giacenzaOlive = calcolaGiacenza(d, "olive");
+            let giacenzaOlive = calcolaGiacenza(d, "Olive (buste)");
             if (giacenzaOlive <= 4) {
                 aggiungiAllOrdine("Olive", 1);
             }

@@ -190,7 +190,7 @@ function generaVistaTutte(fornitoreSelezionato = "TUTTI") {
     // Mappatura articoli aggiornata
     const fornitori = {
         "TONON": ["mozzarella in kg", "mozza", "mozzarella", "provola", "provola aff.", "bufala (numero)", "bufala", "mozzarella di bufala"],
-        "PIAN": ["porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef"],
+        "PIAN": ["porchetta", "salamino num", "prosciutto cotto", "sopressa", "roastbeef", "ossocollo"],
         "RONCADESE": ["salsiccia", "pancetta"],
         "BORTOLATO": ["burrata"],
         "GHIACCIO FACILE": ["ghiaccio"],

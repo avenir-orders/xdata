@@ -910,7 +910,7 @@ function generaOrdineMetro(dati) {
         // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
         if (trovaGiacenza(lista, 'mortadella') < 1) ordineSede.push(`1 Mortadella suino nero`);
 
-        // 7. Crudo (Soglia 1.5. Arrotondato per eccesso)
+        // 7. Crudo (Soglia 1. Arrotondato per eccesso)
         let qCrudo = Math.ceil(1.5 - trovaGiacenza(lista, 'crudo'));
         if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo Parma 24 mesi`);
 
@@ -946,10 +946,7 @@ function generaOrdineMetro(dati) {
         let qIchnusa = Math.ceil((30 - trovaGiacenza(lista, 'ichnusa')) / 15);
         if (qIchnusa > 0) ordineSede.push(`${qIchnusa} casse Ichnusa non filtrata`);
 
-        // 15. Pedavena (Senza N. - casse da 15)
-        let qPedavena = Math.ceil((30 - trovaGiacenza(lista, 'pedavena')) / 15);
-        if (qPedavena > 0) ordineSede.push(`${qPedavena} casse Pedavena`);
-
+       
         // === REGOLE ESCLUSIVE PER BIBAN ===
         if (sede === 'Biban') {
             // Sale (Soglia totale 2, ordinato SOLO a Biban) - MODIFICATO (soglia 2)

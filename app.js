@@ -958,15 +958,21 @@ function generaOrdineMetro(dati) {
             if (qSale > 0) ordineSede.push(`${qSale} sale (10kg)`);
         }
 
-        // === REGOLE ESCLUSIVE PER CASTA ===
+      // === REGOLE ESCLUSIVE PER CASTA ===
         if (sede === 'Casta') {
-            // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5. - SPOSTATO A CASTA
-            let qPatateFritte = Math.ceil((25 - trovaGiacenza(lista, 'patate fritte')) / 5);
-            if (qPatateFritte > 0) ordineSede.push(`${qPatateFritte} scatole Fry'N Dip`);
+            // Patate fritte: soglia 25 sacchetti. Arrivano in scatole da 5.
+            let qScatoleFritte = Math.ceil((25 - trovaGiacenza(lista, 'patate fritte')) / 5);
+            if (qScatoleFritte > 0) {
+                let qSacchettiFritte = qScatoleFritte * 5;
+                ordineSede.push(`${qSacchettiFritte} sacchetti Fry'N Dip`);
+            }
             
-            // Patate al forno: soglia 25 sacchetti. Arrivano in scatole da 5. - SPOSTATO A CASTA
-            let qPatateForno = Math.ceil((25 - trovaGiacenza(lista, 'patate al forno')) / 5);
-            if (qPatateForno > 0) ordineSede.push(`${qPatateForno} scatole Country Potato Wedges`);
+            // Patate al forno: soglia 25 sacchetti. Arrivano in scatole da 5.
+            let qScatoleForno = Math.ceil((25 - trovaGiacenza(lista, 'patate al forno')) / 5);
+            if (qScatoleForno > 0) {
+                let qSacchettiForno = qScatoleForno * 5;
+                ordineSede.push(`${qSacchettiForno} sacchetti Country Potato Wedges`);
+            }
         }
 
         // Costruzione finale del testo per la sede attuale

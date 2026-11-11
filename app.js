@@ -918,8 +918,8 @@ function generaOrdineMetro(dati) {
             if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo Parma 24 mesi`);
         }
 
-        // 8. Datterino Rosso (Soglie: Casta 5, Silea 2, Biban 4)
-        let sogliaDattRosso = (sede === 'Casta') ? 5 : (sede === 'Silea' ? 2 : 4);
+        // 8. Datterino Rosso (Soglie: Casta 4, Silea 2, Biban 2)
+        let sogliaDattRosso = (sede === 'Casta') ? 4 : (sede === 'Silea' ? 2 : 2);
         let giacDattRosso = trovaGiacenza(lista, 'rosso') || trovaGiacenza(lista, 'cass. datterino');
         let qDattRosso = Math.ceil(sogliaDattRosso - giacDattRosso);
         if (qDattRosso > 0) ordineSede.push(`${qDattRosso} Datt. rosso`);

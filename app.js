@@ -910,9 +910,13 @@ function generaOrdineMetro(dati) {
         // 6. Mortadella (Soglia 1. Sotto 1 ordina 1, se sopra 1 non ordina)
         if (trovaGiacenza(lista, 'mortadella') < 1) ordineSede.push(`1 Mortadella suino nero`);
 
-        // 7. Crudo (Soglia 1. Arrotondato per eccesso)
-        let qCrudo = Math.ceil(1.5 - trovaGiacenza(lista, 'crudo'));
-        if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo Parma 24 mesi`);
+       // 7. Crudo (Ordina SOLO se la giacenza è 0.7 o inferiore)
+        let valCrudo = trovaGiacenza(lista, 'crudo');
+        if (valCrudo <= 0.7) {
+            // Calcola quanto manca per arrivare a 1 (arrotondando per eccesso)
+            let qCrudo = Math.ceil(1 - valCrudo);
+            if (qCrudo > 0) ordineSede.push(`${qCrudo} Crudo Parma 24 mesi`);
+        }
 
         // 8. Datterino Rosso (Soglie: Casta 5, Silea 2, Biban 4)
         let sogliaDattRosso = (sede === 'Casta') ? 5 : (sede === 'Silea' ? 2 : 4);
